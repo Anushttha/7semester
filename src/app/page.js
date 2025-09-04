@@ -1,43 +1,52 @@
-"use client"
+"use client";
 
-
-
-
-import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Upload, Download, ChevronDown, ChevronUp, X, Plus, Minus } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Upload,
+  Download,
+  ChevronDown,
+  ChevronUp,
+  X,
+  Plus,
+  Minus,
+} from "lucide-react";
 
 export default function VideoAnnotationTool() {
   // Add styles at the top of the component
   const styles = {
     labelsDropdown: {
-      position: 'absolute',
-      top: '100%',
+      position: "absolute",
+      top: "100%",
       left: 0,
-      backgroundColor: 'white',
-      border: '1px solid #ccc',
-      borderRadius: '4px',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      backgroundColor: "white",
+      border: "1px solid #ccc",
+      borderRadius: "4px",
+      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
       zIndex: 1000,
-      maxHeight: '200px',
-      overflowY: 'auto',
-      width: '200px'
+      maxHeight: "200px",
+      overflowY: "auto",
+      width: "200px",
     },
     labelItem: {
-      padding: '8px 12px',
-      cursor: 'pointer',
-      transition: 'background-color 0.2s',
-      '&:hover': {
-        backgroundColor: '#f0f0f0'
-      }
+      padding: "8px 12px",
+      cursor: "pointer",
+      transition: "background-color 0.2s",
+      "&:hover": {
+        backgroundColor: "#f0f0f0",
+      },
     },
     selectedLabel: {
-      backgroundColor: '#e6f7ff',
-      fontWeight: 'bold'
-    }
+      backgroundColor: "#e6f7ff",
+      fontWeight: "bold",
+    },
   };
 
   const [video, setVideo] = useState(null);
-  const [videoUrl, setVideoUrl] = useState('');
+  const [videoUrl, setVideoUrl] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -45,19 +54,19 @@ export default function VideoAnnotationTool() {
   const [frames, setFrames] = useState([]);
   const [selectedFrame, setSelectedFrame] = useState(0);
   const [showLabelsDropdown, setShowLabelsDropdown] = useState(false);
-  const [outputFilename, setOutputFilename] = useState('');
-  
+  const [outputFilename, setOutputFilename] = useState("");
+
   // Video name state
-  const [videoName, setVideoName] = useState('');
+  const [videoName, setVideoName] = useState("");
 
   // Available labels for annotation matching the image format
   const [availableLabels] = useState([
-    'C-Z1-Z2',
-    'C-Z2-Z3',
-    'C-Z3-Z4',
-    'C-Z1-Z4',
-    'C-Z2-Z4',
-    'C-Z1-Z3'
+    "C-Z1-Z2",
+    "C-Z2-Z3",
+    "C-Z3-Z4",
+    "C-Z1-Z4",
+    "C-Z2-Z4",
+    "C-Z1-Z3",
   ]);
 
   // Output annotations - this will be exported in the format shown in the image
@@ -70,53 +79,54 @@ export default function VideoAnnotationTool() {
   // Handle video upload
   const handleVideoUpload = (event) => {
     const file = event.target.files[0];
-    if (file && file.type.startsWith('video/')) {
+    if (file && file.type.startsWith("video/")) {
       setVideo(file);
-      setVideoName(file.name.split('.')[0]); // Set the video name without extension
+      setVideoName(file.name.split(".")[0]); // Set the video name without extension
       const url = URL.createObjectURL(file);
       setVideoUrl(url);
       setFrames([]);
       setSelectedFrame(0);
       setCurrentTime(0);
       // Set initial output filename based on video name
-      setOutputFilename(file.name.split('.')[0] + '_annotations');
+      setOutputFilename(file.name.split(".")[0] + "_annotations");
     }
   };
 
   // Extract frames at specified intervals
   const extractFrames = async () => {
     if (!videoRef.current || !canvasRef.current || !duration) return;
-    
+
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
+    const ctx = canvas.getContext("2d");
+
     canvas.width = 200;
     canvas.height = 120;
-    
+
     const frameInterval = splitLength * 60; // Convert minutes to seconds
     const totalFrames = Math.floor(duration / frameInterval);
     const newFrames = [];
-    
-    for (let i = 0; i <= totalFrames && i < 5; i++) { // Limit to 5 frames like in image
+
+    for (let i = 0; i <= totalFrames && i < 5; i++) {
+      // Limit to 5 frames like in image
       const time = i * frameInterval;
       video.currentTime = time;
-      
-      await new Promise(resolve => {
+
+      await new Promise((resolve) => {
         video.onseeked = () => {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const frameData = canvas.toDataURL('image/jpeg', 0.8);
+          const frameData = canvas.toDataURL("image/jpeg", 0.8);
           newFrames.push({
             time,
             image: frameData,
             timestamp: formatTime(time),
-            index: i
+            index: i,
           });
           resolve();
         };
       });
     }
-    
+
     setFrames(newFrames);
     if (newFrames.length > 0) {
       video.currentTime = newFrames[0].time;
@@ -127,7 +137,7 @@ export default function VideoAnnotationTool() {
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   // Video playback controls
@@ -184,26 +194,26 @@ export default function VideoAnnotationTool() {
   // Add label to output annotations following the image format
   const addLabelToOutput = (label) => {
     if (!frames.length) return; // Don't add if no frames exist
-    
+
     const currentFrame = frames[selectedFrame];
     const videoNumber = Math.floor(outputAnnotations.length / 5) + 1;
     const splitNumber = (outputAnnotations.length % 5) + 1;
     const splitName = `video${videoNumber}/splitname${splitNumber}`;
-    
+
     const newAnnotation = {
       id: Date.now(),
       videoName: splitName,
       label: label,
       frameIndex: selectedFrame,
-      timestamp: currentFrame?.timestamp || '0:00',
-      frameTime: currentFrame?.time || 0
+      timestamp: currentFrame?.timestamp || "0:00",
+      frameTime: currentFrame?.time || 0,
     };
-    
+
     // Check if we already have an annotation for this frame
     const existingAnnotationIndex = outputAnnotations.findIndex(
-      a => a.frameIndex === selectedFrame
+      (a) => a.frameIndex === selectedFrame
     );
-    
+
     if (existingAnnotationIndex !== -1) {
       // Update existing annotation
       const updatedAnnotations = [...outputAnnotations];
@@ -213,7 +223,7 @@ export default function VideoAnnotationTool() {
       // Add new annotation
       setOutputAnnotations([...outputAnnotations, newAnnotation]);
     }
-    
+
     // Hide the labels dropdown after selection
     setShowLabelsDropdown(false);
     setShowLabelsDropdown(false);
@@ -221,10 +231,13 @@ export default function VideoAnnotationTool() {
 
   // Toggle annotation status (up/down)
   const toggleAnnotationStatus = (id) => {
-    setOutputAnnotations(prev => 
-      prev.map(annotation => 
-        annotation.id === id 
-          ? { ...annotation, status: annotation.status === 'up' ? 'down' : 'up' }
+    setOutputAnnotations((prev) =>
+      prev.map((annotation) =>
+        annotation.id === id
+          ? {
+              ...annotation,
+              status: annotation.status === "up" ? "down" : "up",
+            }
           : annotation
       )
     );
@@ -232,42 +245,47 @@ export default function VideoAnnotationTool() {
 
   // Move annotation up/down in list
   const moveAnnotation = (id, direction) => {
-    const currentIndex = outputAnnotations.findIndex(ann => ann.id === id);
+    const currentIndex = outputAnnotations.findIndex((ann) => ann.id === id);
     if (currentIndex === -1) return;
-    
-    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
+    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
     if (newIndex < 0 || newIndex >= outputAnnotations.length) return;
-    
+
     const newAnnotations = [...outputAnnotations];
-    [newAnnotations[currentIndex], newAnnotations[newIndex]] = [newAnnotations[newIndex], newAnnotations[currentIndex]];
+    [newAnnotations[currentIndex], newAnnotations[newIndex]] = [
+      newAnnotations[newIndex],
+      newAnnotations[currentIndex],
+    ];
     setOutputAnnotations(newAnnotations);
   };
 
   // Remove annotation
   const removeAnnotation = (id) => {
-    setOutputAnnotations(prev => prev.filter(ann => ann.id !== id));
+    setOutputAnnotations((prev) => prev.filter((ann) => ann.id !== id));
   };
 
   // Export annotations as CSV in the format shown in the image
   const exportAnnotations = () => {
-    const headers = ['Video Name', 'Labels'];
+    const headers = ["Video Name", "Labels"];
     const csvContent = [
-      headers.join(','),
-      ...outputAnnotations.map((annotation, index) => [
-        `video${Math.floor(index/5) + 1}/splitname${(index % 5) + 1}`,
-        `{${annotation.label}}`,
-        annotation.status,
-        annotation.timestamp || '0:00',
-        annotation.frameIndex || 0,
-        annotation.frameTime || 0
-      ].join(','))
-    ].join('\n');
+      headers.join(","),
+      ...outputAnnotations.map((annotation, index) =>
+        [
+          `video${Math.floor(index / 5) + 1}/splitname${(index % 5) + 1}`,
+          `{${annotation.label}}`,
+          annotation.status,
+          annotation.timestamp || "0:00",
+          annotation.frameIndex || 0,
+          annotation.frameTime || 0,
+        ].join(",")
+      ),
+    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = outputFilename || 'annotations.csv';
+    a.download = outputFilename || "annotations.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -283,10 +301,8 @@ export default function VideoAnnotationTool() {
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          
           {/* Left Section - Video and Frame Timeline */}
           <div className="lg:col-span-3 space-y-4">
-            
             {/* Frame Timeline */}
             <div className="bg-white rounded-lg shadow p-4">
               <div className="flex items-center space-x-2 overflow-x-auto pb-2">
@@ -294,7 +310,9 @@ export default function VideoAnnotationTool() {
                   <div key={index} className="flex-shrink-0 text-center">
                     <div
                       className={`cursor-pointer border-4 rounded-lg overflow-hidden ${
-                        selectedFrame === index ? 'border-red-500' : 'border-gray-300'
+                        selectedFrame === index
+                          ? "border-red-500"
+                          : "border-gray-300"
                       }`}
                       onClick={() => selectFrame(index)}
                     >
@@ -328,7 +346,9 @@ export default function VideoAnnotationTool() {
                   <div className="w-full h-full flex items-center justify-center text-white">
                     <div className="text-center">
                       <Upload className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                      <p className="text-lg">Upload a video to start annotation</p>
+                      <p className="text-lg">
+                        Upload a video to start annotation
+                      </p>
                     </div>
                   </div>
                 )}
@@ -350,7 +370,11 @@ export default function VideoAnnotationTool() {
                     className="p-3 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
                     disabled={!video}
                   >
-                    {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+                    {isPlaying ? (
+                      <Pause className="w-6 h-6" />
+                    ) : (
+                      <Play className="w-6 h-6" />
+                    )}
                   </button>
                   <button
                     onClick={seekForward}
@@ -374,7 +398,12 @@ export default function VideoAnnotationTool() {
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-blue-500 h-2 rounded-full transition-all duration-100"
-                    style={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
+                    style={{
+                      width:
+                        duration > 0
+                          ? `${(currentTime / duration) * 100}%`
+                          : "0%",
+                    }}
                   />
                 </div>
               </div>
@@ -383,7 +412,6 @@ export default function VideoAnnotationTool() {
 
           {/* Right Panel - Controls and Annotations */}
           <div className="space-y-4">
-            
             {/* File Upload */}
             <div className="bg-white rounded-lg shadow p-4">
               <input
@@ -420,7 +448,9 @@ export default function VideoAnnotationTool() {
                   min="0.1"
                   step="0.1"
                   value={splitLength}
-                  onChange={(e) => setSplitLength(parseFloat(e.target.value) || 1)}
+                  onChange={(e) =>
+                    setSplitLength(parseFloat(e.target.value) || 1)
+                  }
                   className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 />
                 <button
@@ -438,29 +468,40 @@ export default function VideoAnnotationTool() {
 
             {/* Labels Dropdown */}
             <div className="bg-white rounded-lg shadow p-4 relative">
-              <div className="mb-2 font-medium text-gray-700">Current Frame Label:</div>
+              <div className="mb-2 font-medium text-gray-700">
+                Current Frame Label:
+              </div>
               <button
                 onClick={() => setShowLabelsDropdown(!showLabelsDropdown)}
                 className="w-full flex items-center justify-between p-3 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 <span>
-                  {outputAnnotations.find(a => a.frameIndex === selectedFrame)?.label || 'Select Label'}
+                  {outputAnnotations.find((a) => a.frameIndex === selectedFrame)
+                    ?.label || "Select Label"}
                 </span>
-                <ChevronDown className={`w-4 h-4 transform transition-transform ${showLabelsDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`w-4 h-4 transform transition-transform ${
+                    showLabelsDropdown ? "rotate-180" : ""
+                  }`}
+                />
               </button>
 
               {showLabelsDropdown && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 max-h-60 overflow-y-auto">
                   {availableLabels.map((label, index) => {
                     const isSelected = outputAnnotations.find(
-                      a => a.frameIndex === selectedFrame && a.label === label
+                      (a) => a.frameIndex === selectedFrame && a.label === label
                     );
                     return (
                       <button
                         key={index}
                         onClick={() => addLabelToOutput(label)}
                         className={`w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0
-                          ${isSelected ? 'bg-blue-50 font-medium text-blue-600' : ''}`}
+                          ${
+                            isSelected
+                              ? "bg-blue-50 font-medium text-blue-600"
+                              : ""
+                          }`}
                       >
                         {label}
                       </button>
@@ -475,9 +516,14 @@ export default function VideoAnnotationTool() {
               <h3 className="font-medium mb-3">Output Annotations</h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {outputAnnotations.map((annotation, index) => (
-                  <div key={annotation.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div
+                    key={annotation.id}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                  >
                     <div className="flex-1">
-                      <div className="text-sm font-medium">{annotation.label}</div>
+                      <div className="text-sm font-medium">
+                        {annotation.label}
+                      </div>
                       <div className="text-xs text-gray-500">
                         {annotation.splitName} • {annotation.timestamp}
                       </div>
@@ -485,29 +531,49 @@ export default function VideoAnnotationTool() {
                     <div className="flex items-center space-x-1">
                       {/* Status indicators with proper functionality */}
                       <div className="flex items-center space-x-1 mr-2">
-                        <div className={`w-3 h-3 rounded-full ${annotation.status === 'up' ? 'bg-green-500' : 'bg-gray-300'}`} />
-                        <div className={`w-3 h-3 rounded-full ${annotation.status === 'down' ? 'bg-red-500' : 'bg-gray-300'}`} />
+                        <div
+                          className={`w-3 h-3 rounded-full ${
+                            annotation.status === "up"
+                              ? "bg-green-500"
+                              : "bg-gray-300"
+                          }`}
+                        />
+                        <div
+                          className={`w-3 h-3 rounded-full ${
+                            annotation.status === "down"
+                              ? "bg-red-500"
+                              : "bg-gray-300"
+                          }`}
+                        />
                       </div>
-                      
+
                       {/* Toggle status buttons */}
                       <button
                         onClick={() => toggleAnnotationStatus(annotation.id)}
-                        className={`p-1 rounded ${annotation.status === 'up' ? 'bg-green-100 text-green-600' : 'text-gray-400 hover:bg-green-50 hover:text-green-600'}`}
+                        className={`p-1 rounded ${
+                          annotation.status === "up"
+                            ? "bg-green-100 text-green-600"
+                            : "text-gray-400 hover:bg-green-50 hover:text-green-600"
+                        }`}
                         title="Set to Up"
                       >
                         <ChevronUp className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => toggleAnnotationStatus(annotation.id)}
-                        className={`p-1 rounded ${annotation.status === 'down' ? 'bg-red-100 text-red-600' : 'text-gray-400 hover:bg-red-50 hover:text-red-600'}`}
+                        className={`p-1 rounded ${
+                          annotation.status === "down"
+                            ? "bg-red-100 text-red-600"
+                            : "text-gray-400 hover:bg-red-50 hover:text-red-600"
+                        }`}
                         title="Set to Down"
                       >
                         <ChevronDown className="w-4 h-4" />
                       </button>
-                      
+
                       {/* Move controls */}
                       <button
-                        onClick={() => moveAnnotation(annotation.id, 'up')}
+                        onClick={() => moveAnnotation(annotation.id, "up")}
                         disabled={index === 0}
                         className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Move up in list"
@@ -515,14 +581,14 @@ export default function VideoAnnotationTool() {
                         <ChevronUp className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => moveAnnotation(annotation.id, 'down')}
+                        onClick={() => moveAnnotation(annotation.id, "down")}
                         disabled={index === outputAnnotations.length - 1}
                         className="p-1 text-gray-400 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Move down in list"
                       >
                         <ChevronDown className="w-4 h-4" />
                       </button>
-                      
+
                       {/* Remove */}
                       <button
                         onClick={() => removeAnnotation(annotation.id)}
