@@ -7,6 +7,35 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Upload, Download, ChevronDown, ChevronUp, X, Plus, Minus } from 'lucide-react';
 
 export default function VideoAnnotationTool() {
+  // Add styles at the top of the component
+  const styles = {
+    labelsDropdown: {
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      backgroundColor: 'white',
+      border: '1px solid #ccc',
+      borderRadius: '4px',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      zIndex: 1000,
+      maxHeight: '200px',
+      overflowY: 'auto',
+      width: '200px'
+    },
+    labelItem: {
+      padding: '8px 12px',
+      cursor: 'pointer',
+      transition: 'background-color 0.2s',
+      '&:hover': {
+        backgroundColor: '#f0f0f0'
+      }
+    },
+    selectedLabel: {
+      backgroundColor: '#e6f7ff',
+      fontWeight: 'bold'
+    }
+  };
+
   const [video, setVideo] = useState(null);
   const [videoUrl, setVideoUrl] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -18,23 +47,21 @@ export default function VideoAnnotationTool() {
   const [showLabelsDropdown, setShowLabelsDropdown] = useState(false);
   const [outputFilename, setOutputFilename] = useState('');
   
-  // Available labels for annotation
+  // Video name state
+  const [videoName, setVideoName] = useState('');
+
+  // Available labels for annotation matching the image format
   const [availableLabels] = useState([
-    'C:Z1-Z3',
-    'C:Z1-Z2', 
-    'C+:Z3-Z4',
-    'C+:Z1-Z2',
-    'P:C1-C2',
-    'P+:C1-C2',
-    'P+:C1-C2'
+    'C-Z1-Z2',
+    'C-Z2-Z3',
+    'C-Z3-Z4',
+    'C-Z1-Z4',
+    'C-Z2-Z4',
+    'C-Z1-Z3'
   ]);
 
-  // Output annotations - this will be exported
-  const [outputAnnotations, setOutputAnnotations] = useState([
-    { id: 1, label: 'C:Z1-Z2', status: 'up', splitName: 'split_1', frameIndex: 0, timestamp: '1:00' },
-    { id: 2, label: 'P:C1-C4', status: 'down', splitName: 'split_2', frameIndex: 1, timestamp: '2:00' },  
-    { id: 3, label: 'B:Z1-Z2', status: 'up', splitName: 'split_3', frameIndex: 2, timestamp: '3:00' }
-  ]);
+  // Output annotations - this will be exported in the format shown in the image
+  const [outputAnnotations, setOutputAnnotations] = useState([]);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -45,11 +72,14 @@ export default function VideoAnnotationTool() {
     const file = event.target.files[0];
     if (file && file.type.startsWith('video/')) {
       setVideo(file);
+      setVideoName(file.name.split('.')[0]); // Set the video name without extension
       const url = URL.createObjectURL(file);
       setVideoUrl(url);
       setFrames([]);
       setSelectedFrame(0);
       setCurrentTime(0);
+      // Set initial output filename based on video name
+      setOutputFilename(file.name.split('.')[0] + '_annotations');
     }
   };
 
@@ -151,21 +181,41 @@ export default function VideoAnnotationTool() {
     }
   };
 
-  // Add label to output annotations
+  // Add label to output annotations following the image format
   const addLabelToOutput = (label) => {
+    if (!frames.length) return; // Don't add if no frames exist
+    
     const currentFrame = frames[selectedFrame];
-    const splitName = `split_${selectedFrame + 1}`;
+    const videoNumber = Math.floor(outputAnnotations.length / 5) + 1;
+    const splitNumber = (outputAnnotations.length % 5) + 1;
+    const splitName = `video${videoNumber}/splitname${splitNumber}`;
     
     const newAnnotation = {
       id: Date.now(),
+      videoName: splitName,
       label: label,
-      status: 'up', // default status
       frameIndex: selectedFrame,
       timestamp: currentFrame?.timestamp || '0:00',
-      splitName: splitName,
       frameTime: currentFrame?.time || 0
     };
-    setOutputAnnotations([...outputAnnotations, newAnnotation]);
+    
+    // Check if we already have an annotation for this frame
+    const existingAnnotationIndex = outputAnnotations.findIndex(
+      a => a.frameIndex === selectedFrame
+    );
+    
+    if (existingAnnotationIndex !== -1) {
+      // Update existing annotation
+      const updatedAnnotations = [...outputAnnotations];
+      updatedAnnotations[existingAnnotationIndex] = newAnnotation;
+      setOutputAnnotations(updatedAnnotations);
+    } else {
+      // Add new annotation
+      setOutputAnnotations([...outputAnnotations, newAnnotation]);
+    }
+    
+    // Hide the labels dropdown after selection
+    setShowLabelsDropdown(false);
     setShowLabelsDropdown(false);
   };
 
@@ -198,15 +248,14 @@ export default function VideoAnnotationTool() {
     setOutputAnnotations(prev => prev.filter(ann => ann.id !== id));
   };
 
-  // Export annotations as CSV
+  // Export annotations as CSV in the format shown in the image
   const exportAnnotations = () => {
-    const headers = ['id', 'split_name', 'label', 'status', 'timestamp', 'frame_index', 'frame_time_seconds'];
+    const headers = ['Video Name', 'Labels'];
     const csvContent = [
       headers.join(','),
       ...outputAnnotations.map((annotation, index) => [
-        index + 1,
-        annotation.splitName || `split_${annotation.frameIndex + 1}`,
-        annotation.label,
+        `video${Math.floor(index/5) + 1}/splitname${(index % 5) + 1}`,
+        `{${annotation.label}}`,
         annotation.status,
         annotation.timestamp || '0:00',
         annotation.frameIndex || 0,
@@ -389,25 +438,34 @@ export default function VideoAnnotationTool() {
 
             {/* Labels Dropdown */}
             <div className="bg-white rounded-lg shadow p-4 relative">
+              <div className="mb-2 font-medium text-gray-700">Current Frame Label:</div>
               <button
                 onClick={() => setShowLabelsDropdown(!showLabelsDropdown)}
                 className="w-full flex items-center justify-between p-3 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
-                <span>Labels</span>
+                <span>
+                  {outputAnnotations.find(a => a.frameIndex === selectedFrame)?.label || 'Select Label'}
+                </span>
                 <ChevronDown className={`w-4 h-4 transform transition-transform ${showLabelsDropdown ? 'rotate-180' : ''}`} />
               </button>
-              
+
               {showLabelsDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-10">
-                  {availableLabels.map((label, index) => (
-                    <button
-                      key={index}
-                      onClick={() => addLabelToOutput(label)}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
-                    >
-                      {label}
-                    </button>
-                  ))}
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 max-h-60 overflow-y-auto">
+                  {availableLabels.map((label, index) => {
+                    const isSelected = outputAnnotations.find(
+                      a => a.frameIndex === selectedFrame && a.label === label
+                    );
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => addLabelToOutput(label)}
+                        className={`w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0
+                          ${isSelected ? 'bg-blue-50 font-medium text-blue-600' : ''}`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
