@@ -72,14 +72,21 @@ export default function VideoAnnotationTool() {
   // Output annotations - this will be exported in the format shown in the image
   const [outputAnnotations, setOutputAnnotations] = useState([]);
 
+  // Upload & Split progress states (minimal changes)
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [splitProgress, setSplitProgress] = useState(0);
+  const [isSplitting, setIsSplitting] = useState(false);
+
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Handle video upload
+  // Handle video upload (file selection)
   const handleVideoUpload = (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith("video/")) {
+      // Original behavior preserved
       setVideo(file);
       setVideoName(file.name.split(".")[0]); // Set the video name without extension
       const url = URL.createObjectURL(file);
@@ -89,14 +96,64 @@ export default function VideoAnnotationTool() {
       setCurrentTime(0);
       // Set initial output filename based on video name
       setOutputFilename(file.name.split(".")[0] + "_annotations");
+
+      // reset upload progress so user can click Upload
+      setUploadProgress(0);
+      setIsUploading(false);
     }
   };
 
-  // Extract frames at specified intervals
+  // Function to run when user clicks the Upload button
+  const handleUploadClick = () => {
+    // If no file selected, open file picker (same UX as before)
+    if (!video) {
+      fileInputRef.current?.click();
+      return;
+    }
+
+    // If already uploading, do nothing
+    if (isUploading) return;
+
+    // Use FileReader to provide real progress events for local file read (simulates upload progress)
+    try {
+      const reader = new FileReader();
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      reader.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(percent);
+        }
+      };
+
+      reader.onloadstart = () => {
+        setUploadProgress(0);
+      };
+
+      reader.onloadend = () => {
+        // mark as 100% upon completion
+        setUploadProgress(100);
+        // small delay so user sees 100%
+        setTimeout(() => {
+          setIsUploading(false);
+        }, 300);
+      };
+
+      // We don't need reader.result for functionality since we use URL.createObjectURL,
+      // but reading gives us progress events.
+      reader.readAsArrayBuffer(video);
+    } catch (err) {
+      console.error("Upload simulation error:", err);
+      setIsUploading(false);
+    }
+  };
+
+  // Extract frames at specified intervals (preserve logic, add split progress)
   const extractFrames = async () => {
     if (!videoRef.current || !canvasRef.current || !duration) return;
 
-    const video = videoRef.current;
+    const videoEl = videoRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
@@ -107,29 +164,46 @@ export default function VideoAnnotationTool() {
     const totalFrames = Math.floor(duration / frameInterval);
     const newFrames = [];
 
-    for (let i = 0; i <= totalFrames && i < 5; i++) {
-      // Limit to 5 frames like in image
-      const time = i * frameInterval;
-      video.currentTime = time;
+    setIsSplitting(true);
+    setSplitProgress(0);
 
-      await new Promise((resolve) => {
-        video.onseeked = () => {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const frameData = canvas.toDataURL("image/jpeg", 0.8);
-          newFrames.push({
-            time,
-            image: frameData,
-            timestamp: formatTime(time),
-            index: i,
-          });
-          resolve();
-        };
-      });
-    }
+    // figure out how many frames we'll actually extract (original limited to 5)
+    const framesToExtract = Math.min(totalFrames, 4) + 1; // +1 because loop uses <=
+    try {
+      for (let i = 0; i <= totalFrames && i < 5; i++) {
+        // Limit to 5 frames like in image
+        const time = i * frameInterval;
+        videoEl.currentTime = time;
 
-    setFrames(newFrames);
-    if (newFrames.length > 0) {
-      video.currentTime = newFrames[0].time;
+        await new Promise((resolve) => {
+          videoEl.onseeked = () => {
+            ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+            const frameData = canvas.toDataURL("image/jpeg", 0.8);
+            newFrames.push({
+              time,
+              image: frameData,
+              timestamp: formatTime(time),
+              index: i,
+            });
+
+            // update split progress
+            const percent = Math.round(((i + 1) / framesToExtract) * 100);
+            setSplitProgress(percent);
+            resolve();
+          };
+        });
+      }
+
+      setFrames(newFrames);
+      if (newFrames.length > 0) {
+        videoEl.currentTime = newFrames[0].time;
+      }
+    } finally {
+      // ensure flags are reset even if something fails
+      setSplitProgress(100);
+      setTimeout(() => {
+        setIsSplitting(false);
+      }, 200);
     }
   };
 
@@ -295,6 +369,7 @@ export default function VideoAnnotationTool() {
     if (video && duration > 0) {
       extractFrames();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [splitLength, duration]);
 
   return (
@@ -428,13 +503,33 @@ export default function VideoAnnotationTool() {
                 <span>Browse</span>
                 <Upload className="w-4 h-4" />
               </button>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full mt-2 flex items-center justify-center space-x-2 p-3 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
-                <span>Upload</span>
-                <Upload className="w-4 h-4" />
-              </button>
+
+              {/* Upload button now triggers handleUploadClick and shows progress */}
+              <div className="mt-2">
+                <button
+                  onClick={handleUploadClick}
+                  className="w-full mt-0 flex items-center justify-center space-x-2 p-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                  disabled={isUploading}
+                >
+                  <span>Upload</span>
+                  <Upload className="w-4 h-4" />
+                </button>
+
+                {/* Upload progress (minimal UI change) */}
+                {(isUploading || uploadProgress > 0) && (
+                  <div className="mt-2 flex items-center space-x-2">
+                    <div className="flex-1 w-full bg-gray-200 h-2 rounded">
+                      <div
+                        className="bg-blue-500 h-2 rounded transition-all"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <div className="text-xs w-10 text-right">
+                      {uploadProgress}% 
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Split Length Control */}
@@ -451,19 +546,37 @@ export default function VideoAnnotationTool() {
                   onChange={(e) =>
                     setSplitLength(parseFloat(e.target.value) || 1)
                   }
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="flex-1 px-3 text-black py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 />
                 <button
                   onClick={extractFrames}
-                  disabled={!video}
+                  disabled={!video || isSplitting}
                   className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
                 >
                   Split ✂
                 </button>
-                <button className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                <button
+                  onClick={() => setShowLabelsDropdown(true)}
+                  className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                >
                   Choose 🎯
                 </button>
               </div>
+
+              {/* Split progress (minimal UI change) */}
+              {(isSplitting || splitProgress > 0) && (
+                <div className="mt-3 flex items-center space-x-2">
+                  <div className="flex-1 w-full bg-gray-200 h-2 rounded">
+                    <div
+                      className="bg-green-500 h-2 rounded transition-all"
+                      style={{ width: `${splitProgress}%` }}
+                    />
+                  </div>
+                  <div className="text-xs w-10 text-right">
+                    {splitProgress}%
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Labels Dropdown */}
@@ -513,7 +626,7 @@ export default function VideoAnnotationTool() {
 
             {/* Output Annotations */}
             <div className="bg-white rounded-lg shadow p-4">
-              <h3 className="font-medium mb-3">Output Annotations</h3>
+              <h3 className="font-medium text-black mb-3">Output Annotations</h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {outputAnnotations.map((annotation, index) => (
                   <div
@@ -614,7 +727,7 @@ export default function VideoAnnotationTool() {
                   placeholder="annotations.csv"
                   value={outputFilename}
                   onChange={(e) => setOutputFilename(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  className="flex-1 px-3 text-black py-2 border border-gray-300 rounded focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 />
                 <button
                   onClick={exportAnnotations}
