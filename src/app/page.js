@@ -13,6 +13,8 @@ import {
   X,
   Plus,
   Minus,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 
 export default function VideoAnnotationTool() {
@@ -56,8 +58,9 @@ export default function VideoAnnotationTool() {
   const [showLabelsDropdown, setShowLabelsDropdown] = useState(false);
   const [outputFilename, setOutputFilename] = useState("");
 
-  // Video name state
+  // Video name state - now includes actual video name
   const [videoName, setVideoName] = useState("");
+  const [currentVideoId, setCurrentVideoId] = useState("");
 
   // Available labels for annotation matching the image format
   const [availableLabels] = useState([
@@ -82,20 +85,55 @@ export default function VideoAnnotationTool() {
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  // Load annotations from localStorage on component mount
+  useEffect(() => {
+    const savedAnnotations = localStorage.getItem('videoAnnotations');
+    if (savedAnnotations) {
+      try {
+        setOutputAnnotations(JSON.parse(savedAnnotations));
+      } catch (error) {
+        console.error('Error loading saved annotations:', error);
+      }
+    }
+  }, []);
+
+  // Save annotations to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('videoAnnotations', JSON.stringify(outputAnnotations));
+  }, [outputAnnotations]);
+
+  // Reset video-specific states when video changes
+  useEffect(() => {
+    if (video) {
+      // Clear frames and reset selection for new video
+      setFrames([]);
+      setSelectedFrame(0);
+      setCurrentTime(0);
+      setShowLabelsDropdown(false);
+    }
+  }, [video]);
+
   // Handle video upload (file selection)
   const handleVideoUpload = (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith("video/")) {
-      // Original behavior preserved
+      // Generate unique ID for this video session
+      const videoId = `video_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      setCurrentVideoId(videoId);
+      
+      // Set the actual video name without extension
+      const actualVideoName = file.name.split(".")[0];
+      setVideoName(actualVideoName);
+      
       setVideo(file);
-      setVideoName(file.name.split(".")[0]); // Set the video name without extension
       const url = URL.createObjectURL(file);
       setVideoUrl(url);
       setFrames([]);
       setSelectedFrame(0);
       setCurrentTime(0);
-      // Set initial output filename based on video name
-      setOutputFilename(file.name.split(".")[0] + "_annotations");
+      
+      // Set output filename based on actual video name
+      setOutputFilename(`${actualVideoName}_annotations`);
 
       // reset upload progress so user can click Upload
       setUploadProgress(0);
@@ -184,6 +222,7 @@ export default function VideoAnnotationTool() {
               image: frameData,
               timestamp: formatTime(time),
               index: i,
+              videoId: currentVideoId, // Associate frame with current video
             });
 
             // update split progress
@@ -265,18 +304,32 @@ export default function VideoAnnotationTool() {
     }
   };
 
+  // Get annotations for current frame (filtered by current video)
+  const getCurrentFrameAnnotations = () => {
+    if (!frames.length) return [];
+    
+    const currentFrame = frames[selectedFrame];
+    return outputAnnotations.filter(annotation => 
+      annotation.videoId === currentVideoId && 
+      annotation.frameIndex === selectedFrame
+    );
+  };
+
   // Add label to output annotations following the image format
   const addLabelToOutput = (label) => {
-    if (!frames.length) return; // Don't add if no frames exist
+    if (!frames.length || !currentVideoId) return; // Don't add if no frames exist or no video loaded
 
     const currentFrame = frames[selectedFrame];
-    const videoNumber = Math.floor(selectedFrame / 5) + 1;
-    const splitNumber = (selectedFrame % 5) + 1;
-    const splitName = `video${videoNumber}/splitname${splitNumber}`;
+    
+    // Use actual video name and proper split naming
+    const splitNumber = selectedFrame + 1;
+    const splitName = `${videoName}/split${splitNumber}`;
 
-    // Check if we already have an annotation for this frame
+    // Check if we already have an annotation for this frame in current video
     const existingAnnotationIndex = outputAnnotations.findIndex(
-      (a) => a.frameIndex === selectedFrame
+      (a) => a.frameIndex === selectedFrame && 
+             a.videoId === currentVideoId &&
+             a.videoName === splitName
     );
 
     if (existingAnnotationIndex !== -1) {
@@ -293,10 +346,12 @@ export default function VideoAnnotationTool() {
         setOutputAnnotations(updatedAnnotations);
       }
     } else {
-      // Add new annotation
+      // Add new annotation with proper video identification
       const newAnnotation = {
         id: Date.now(),
         videoName: splitName,
+        videoId: currentVideoId,
+        actualVideoName: videoName,
         labels: [label],
         frameIndex: selectedFrame,
         timestamp: currentFrame?.timestamp || "0:00",
@@ -342,13 +397,123 @@ export default function VideoAnnotationTool() {
     setOutputAnnotations((prev) => prev.filter((ann) => ann.id !== id));
   };
 
+  // Move annotation up in the list
+  const moveAnnotationUp = (index) => {
+    if (index <= 0) return; // Can't move first item up
+    
+    const newAnnotations = [...outputAnnotations];
+    const temp = newAnnotations[index];
+    newAnnotations[index] = newAnnotations[index - 1];
+    newAnnotations[index - 1] = temp;
+    
+    setOutputAnnotations(newAnnotations);
+  };
+
+  // Move annotation down in the list
+  const moveAnnotationDown = (index) => {
+    if (index >= outputAnnotations.length - 1) return; // Can't move last item down
+    
+    const newAnnotations = [...outputAnnotations];
+    const temp = newAnnotations[index];
+    newAnnotations[index] = newAnnotations[index + 1];
+    newAnnotations[index + 1] = temp;
+    
+    setOutputAnnotations(newAnnotations);
+  };
+
+  // Move label up within an annotation
+  const moveLabelUp = (annotationId, labelIndex) => {
+    if (labelIndex <= 0) return; // Can't move first label up
+    
+    setOutputAnnotations(prev => 
+      prev.map(annotation => {
+        if (annotation.id === annotationId) {
+          const newLabels = [...annotation.labels];
+          const temp = newLabels[labelIndex];
+          newLabels[labelIndex] = newLabels[labelIndex - 1];
+          newLabels[labelIndex - 1] = temp;
+          
+          return {
+            ...annotation,
+            labels: newLabels
+          };
+        }
+        return annotation;
+      })
+    );
+  };
+
+  // Move label down within an annotation
+  const moveLabelDown = (annotationId, labelIndex) => {
+    setOutputAnnotations(prev => 
+      prev.map(annotation => {
+        if (annotation.id === annotationId) {
+          if (labelIndex >= annotation.labels.length - 1) return annotation; // Can't move last label down
+          
+          const newLabels = [...annotation.labels];
+          const temp = newLabels[labelIndex];
+          newLabels[labelIndex] = newLabels[labelIndex + 1];
+          newLabels[labelIndex + 1] = temp;
+          
+          return {
+            ...annotation,
+            labels: newLabels
+          };
+        }
+        return annotation;
+      })
+    );
+  };
+
+  // Move label to first position within an annotation
+  const moveLabelToFirst = (annotationId, labelIndex) => {
+    if (labelIndex === 0) return; // Already first
+    
+    setOutputAnnotations(prev => 
+      prev.map(annotation => {
+        if (annotation.id === annotationId) {
+          const newLabels = [...annotation.labels];
+          const [movedLabel] = newLabels.splice(labelIndex, 1);
+          newLabels.unshift(movedLabel);
+          
+          return {
+            ...annotation,
+            labels: newLabels
+          };
+        }
+        return annotation;
+      })
+    );
+  };
+
+  // Move label to last position within an annotation
+  const moveLabelToLast = (annotationId, labelIndex) => {
+    setOutputAnnotations(prev => 
+      prev.map(annotation => {
+        if (annotation.id === annotationId) {
+          if (labelIndex === annotation.labels.length - 1) return annotation; // Already last
+          
+          const newLabels = [...annotation.labels];
+          const [movedLabel] = newLabels.splice(labelIndex, 1);
+          newLabels.push(movedLabel);
+          
+          return {
+            ...annotation,
+            labels: newLabels
+          };
+        }
+        return annotation;
+      })
+    );
+  };
+
   // Export annotations as CSV in the format shown in the image
   const exportAnnotations = () => {
     const headers = ["Video Name", "Labels"];
     const csvContent = [
       headers.join(","),
       ...outputAnnotations.map((annotation) =>
-        [annotation.videoName, `{${annotation.labels.join(",")}}`].join(",")
+        [annotation.videoName, `{${annotation.labels.join(" | ")}}`].join(",")
       ),
     ].join("\n");
 
@@ -359,6 +524,22 @@ export default function VideoAnnotationTool() {
     a.download = outputFilename || "annotations.csv";
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  // Clear all annotations
+  const clearAllAnnotations = () => {
+    if (confirm("Are you sure you want to clear all annotations?")) {
+      setOutputAnnotations([]);
+    }
+  };
+
+  // Clear current video annotations only
+  const clearCurrentVideoAnnotations = () => {
+    if (confirm("Are you sure you want to clear annotations for the current video?")) {
+      setOutputAnnotations(prev => 
+        prev.filter(annotation => annotation.videoId !== currentVideoId)
+      );
+    }
   };
 
   return (
@@ -519,6 +700,13 @@ export default function VideoAnnotationTool() {
                   </div>
                 )}
               </div>
+
+              {/* Current Video Info */}
+              {videoName && (
+                <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
+                  <strong>Current Video:</strong> {videoName}
+                </div>
+              )}
             </div>
 
             {/* Split Length Control */}
@@ -546,7 +734,8 @@ export default function VideoAnnotationTool() {
                 </button>
                 <button
                   onClick={() => setShowLabelsDropdown(true)}
-                  className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                  disabled={!frames.length}
+                  className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
                 >
                   Choose 🎯
                 </button>
@@ -575,12 +764,13 @@ export default function VideoAnnotationTool() {
               </div>
               <button
                 onClick={() => setShowLabelsDropdown(!showLabelsDropdown)}
-                className="w-full flex items-center justify-between p-3 bg-blue-600 text-white rounded hover:bg-blue-700"
+                disabled={!frames.length}
+                className="w-full flex items-center justify-between p-3 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
               >
                 <span>
-                  {outputAnnotations
-                    .find((a) => a.frameIndex === selectedFrame)
-                    ?.labels?.join(", ") || "Select Label"}
+                  {getCurrentFrameAnnotations()
+                    .flatMap(a => a.labels)
+                    .join(", ") || "Select Label"}
                 </span>
                 <ChevronDown
                   className={`w-4 h-4 transform transition-transform ${
@@ -592,16 +782,14 @@ export default function VideoAnnotationTool() {
               {showLabelsDropdown && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 max-h-60 overflow-y-auto">
                   {availableLabels.map((label, index) => {
-                    const isSelected = outputAnnotations.find(
-                      (a) =>
-                        a.frameIndex === selectedFrame &&
-                        a.labels?.includes(label)
-                    );
+                    const isSelected = getCurrentFrameAnnotations()
+                      .flatMap(a => a.labels)
+                      .includes(label);
                     return (
                       <button
                         key={index}
                         onClick={() => addLabelToOutput(label)}
-                        className={`w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0
+                        className={`w-full text-left text-black px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0
                           ${
                             isSelected
                               ? "bg-blue-50 font-medium text-blue-600"
@@ -618,50 +806,153 @@ export default function VideoAnnotationTool() {
 
             {/* Output Annotations */}
             <div className="bg-white rounded-lg shadow p-4">
-              <h3 className="font-medium text-black mb-3">
-                Output Annotations
-              </h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-medium text-black">Output Annotations</h3>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={clearCurrentVideoAnnotations}
+                    disabled={!currentVideoId}
+                    className="text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600 disabled:opacity-50"
+                    title="Clear current video annotations"
+                  >
+                    Clear Current
+                  </button>
+                  <button
+                    onClick={clearAllAnnotations}
+                    className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </div>
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                {outputAnnotations.map((annotation) => (
-                  <div key={annotation.id} className="p-2 bg-gray-50 rounded">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">
-                          {annotation.videoName}
+                {outputAnnotations
+                  .filter(annotation => annotation.videoId === currentVideoId)
+                  .map((annotation, index) => {
+                    const globalIndex = outputAnnotations.findIndex(a => a.id === annotation.id);
+                    return (
+                      <div key={annotation.id} className="p-2 bg-gray-50 rounded">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <div className="text-sm font-medium">
+                              {annotation.videoName}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {annotation.timestamp}
+                            </div>
+                          </div>
+                          <div className="flex space-x-1">
+                            <button
+                              onClick={() => moveAnnotationUp(globalIndex)}
+                              disabled={globalIndex === 0}
+                              className={`p-1 rounded ${
+                                globalIndex === 0 
+                                  ? "text-gray-300 cursor-not-allowed" 
+                                  : "text-gray-600 hover:bg-gray-200"
+                              }`}
+                              title="Move annotation up"
+                            >
+                              <ArrowUp className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => moveAnnotationDown(globalIndex)}
+                              disabled={globalIndex === outputAnnotations.length - 1}
+                              className={`p-1 rounded ${
+                                globalIndex === outputAnnotations.length - 1
+                                  ? "text-gray-300 cursor-not-allowed" 
+                                  : "text-gray-600 hover:bg-gray-200"
+                              }`}
+                              title="Move annotation down"
+                            >
+                              <ArrowDown className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => removeAnnotation(annotation.id)}
+                              className="p-1 text-gray-400 hover:text-red-600"
+                              title="Delete annotation"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {annotation.timestamp}
+
+                        <div className="flex flex-wrap gap-2">
+                          {annotation.labels.map((label, labelIndex) => (
+                            <div
+                              key={labelIndex}
+                              className="flex items-center bg-blue-100 rounded-full px-3 py-1 text-xs font-medium text-blue-800"
+                            >
+                              <div className="flex items-center space-x-1">
+                                <button
+                                  onClick={() => moveLabelToFirst(annotation.id, labelIndex)}
+                                  disabled={labelIndex === 0}
+                                  className={`p-0.5 rounded ${
+                                    labelIndex === 0 
+                                      ? "text-blue-300 cursor-not-allowed" 
+                                      : "text-blue-600 hover:bg-blue-200"
+                                  }`}
+                                  title="Move to first"
+                                >
+                                  ⇈
+                                </button>
+                                <button
+                                  onClick={() => moveLabelUp(annotation.id, labelIndex)}
+                                  disabled={labelIndex === 0}
+                                  className={`p-0.5 rounded ${
+                                    labelIndex === 0 
+                                      ? "text-blue-300 cursor-not-allowed" 
+                                      : "text-blue-600 hover:bg-blue-200"
+                                  }`}
+                                  title="Move up"
+                                >
+                                  <ArrowUp className="w-3 h-3" />
+                                </button>
+                                <span>{label}</span>
+                                <button
+                                  onClick={() => moveLabelDown(annotation.id, labelIndex)}
+                                  disabled={labelIndex === annotation.labels.length - 1}
+                                  className={`p-0.5 rounded ${
+                                    labelIndex === annotation.labels.length - 1
+                                      ? "text-blue-300 cursor-not-allowed" 
+                                      : "text-blue-600 hover:bg-blue-200"
+                                  }`}
+                                  title="Move down"
+                                >
+                                  <ArrowDown className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() => moveLabelToLast(annotation.id, labelIndex)}
+                                  disabled={labelIndex === annotation.labels.length - 1}
+                                  className={`p-0.5 rounded ${
+                                    labelIndex === annotation.labels.length - 1
+                                      ? "text-blue-300 cursor-not-allowed" 
+                                      : "text-blue-600 hover:bg-blue-200"
+                                  }`}
+                                  title="Move to last"
+                                >
+                                  ⇊
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    removeLabelFromAnnotation(annotation.id, label)
+                                  }
+                                  className="ml-1 text-blue-600 hover:text-blue-800"
+                                  title="Remove label"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <button
-                        onClick={() => removeAnnotation(annotation.id)}
-                        className="p-1 text-gray-400 hover:text-red-600"
-                        title="Delete annotation"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {annotation.labels.map((label, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center bg-blue-100 rounded-full px-3 py-1 text-xs font-medium text-blue-800"
-                        >
-                          {label}
-                          <button
-                            onClick={() =>
-                              removeLabelFromAnnotation(annotation.id, label)
-                            }
-                            className="ml-1 text-blue-600 hover:text-blue-800"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                    );
+                  })}
+                {outputAnnotations.filter(annotation => annotation.videoId === currentVideoId).length === 0 && (
+                  <div className="text-center text-gray-500 py-4">
+                    No annotations for current video
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
