@@ -32,6 +32,16 @@ const FemimiApp = () => {
     shoeSize: "",
   });
 
+  const [openSections, setOpenSections] = useState([]);
+
+  const toggleSection = (index) => {
+    setOpenSections(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
+  };
+
   const fadeInUp = {
     hidden: { opacity: 0, y: 50 },
     visible: (i = 0) => ({
@@ -60,18 +70,18 @@ const FemimiApp = () => {
       className="fixed top-0 left-0 right-0 bg-white z-50 px-5 py-4 flex justify-between items-center shadow-sm"
     >
       <button onClick={() => setMenuOpen(true)} className="p-2">
-        <Menu className="w-6 h-6" style={{ color: "#0f1e3d" }} />
+        <Menu className="w-6 h-6" style={{ color: "#000000" }} />
       </button>
       <motion.h1
         whileHover={{ scale: 1.05 }}
         className="text-2xl font-black tracking-tight"
-        style={{ color: "#0f1e3d" }}
+        style={{ color: "#000000" }}
       >
-        FEMIMI
+       Femini
       </motion.h1>
       <button
         className="text-sm font-bold px-4 py-2 rounded-full transition-colors hover:bg-gray-100"
-        style={{ color: "#0f1e3d" }}
+        style={{ color: "#000000" }}
       >
         Sign In
       </button>
@@ -100,7 +110,7 @@ const FemimiApp = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-10">
                 <button onClick={() => setMenuOpen(false)} className="p-2">
-                  <X className="w-6 h-6" style={{ color: "#0f1e3d" }} />
+                  <X className="w-6 h-6" style={{ color: "#000000" }} />
                 </button>
               </div>
               <nav className="space-y-8">
@@ -115,7 +125,7 @@ const FemimiApp = () => {
                       <a
                         href="#"
                         className="block text-xl font-bold transition-colors"
-                        style={{ color: "#0f1e3d" }}
+                        style={{ color: "#000000" }}
                       >
                         {item}
                       </a>
@@ -131,7 +141,7 @@ const FemimiApp = () => {
                   <a
                     href="#"
                     className="flex items-center text-lg font-bold transition-colors"
-                    style={{ color: "#0f1e3d" }}
+                    style={{ color: "#000000" }}
                   >
                     Take your style quiz{" "}
                     <ChevronRight className="w-5 h-5 ml-2" />
@@ -146,308 +156,194 @@ const FemimiApp = () => {
   );
 
   const Footer = () => (
-    <footer className="bg-[#0f1e3d] text-white py-12 px-4 mt-16">
+    <footer className="bg-white text-black py-12 px-4 mt-16 border-t border-gray-200">
       <div className="max-w-6xl mx-auto">
-        {/* Mobile Accordion for primary sections */}
-        <div className="md:hidden space-y-4">
-          <motion.div className="space-y-6">
-            {[
-              {
-                title: "Shop",
-                links: [
-                  "Women's Styles",
-                  "Men's Styles",
-                  "Kids",
-                  "Plus Sizes",
-                  "Petite",
-                  "Maternity",
-                  "Business Casual",
-                ],
-              },
-              {
-                title: "Customer Service",
-                links: [
-                  "Help Center",
-                  "Returns & Exchanges",
-                  "Shipping Info",
-                  "Gift Cards",
-                  "Size Guide",
-                ],
-              },
-              {
-                title: "Company",
-                links: [
-                  "About Us",
-                  "Careers",
-                  "Social Impact",
-                  "Press",
-                  "Tech Blog",
-                  "Investor Relations",
-                ],
-              },
-            ].map((section, index) => (
-              <motion.div
-                key={section.title}
-                initial={false}
-                animate={{ height: "auto" }}
-                className="border-b border-gray-700 pb-4"
-              >
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full flex justify-between items-center py-2 text-left font-bold text-lg"
-                  onClick={() => toggleSection(index)}
-                >
-                  {section.title}
-                  <ChevronDown className="w-5 h-5" />
-                </motion.button>
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: "auto" }}
-                  className="overflow-hidden"
-                >
-                  <div className="space-y-3 pt-2">
-                    {section.links.map((link) => (
-                      <a
-                        key={link}
-                        href="#"
-                        className="block text-gray-300 hover:text-white transition-colors py-1"
-                      >
-                        {link}
-                      </a>
-                    ))}
-                  </div>
-                </motion.div>
-              </motion.div>
-            ))}
-          </motion.div>
+        {/* Desktop Layout */}
+        <div className="hidden md:grid md:grid-cols-3 gap-12">
+          {/* The Service */}
+          <div>
+            <h3 className="font-bold text-lg mb-6 text-black">The Service</h3>
+            <ul className="space-y-3">
+              {[
+                "Gift cards",
+                "iPhone App",
+                "Plus Sizes",
+                "Maternity",
+                "Petite",
+                "Big & Tall",
+                "Women's Jeans",
+                "Business Casual"
+              ].map((item) => (
+                <li key={item}>
+                  <a
+                    href="#"
+                    className="text-gray-600 hover:text-black transition-colors text-sm"
+                  >
+                    {item}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Questions? */}
+          <div>
+            <h3 className="font-bold text-lg mb-6 text-black">Questions?</h3>
+            <ul className="space-y-3">
+              {[
+                "Help",
+                "Returns"
+              ].map((item) => (
+                <li key={item}>
+                  <a
+                    href="#"
+                    className="text-gray-600 hover:text-black transition-colors text-sm"
+                  >
+                    {item}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* The Company */}
+          <div>
+            <h3 className="font-bold text-lg mb-6 text-black">The Company</h3>
+            <ul className="space-y-3">
+              {[
+                "About Us",
+                "Returns",
+                "Social Impact",
+                "Press",
+                "Investor Relations",
+                "Careers",
+                "Tech Blog",
+                "Affiliates"
+              ].map((item) => (
+                <li key={item}>
+                  <a
+                    href="#"
+                    className="text-gray-600 hover:text-black transition-colors text-sm"
+                  >
+                    {item}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        {/* Desktop Layout */}
-        <div className="hidden md:grid md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="font-bold text-xl mb-6">Shop</h3>
-            <ul className="space-y-3">
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Women's Styles
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Men's Styles
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Kids
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Plus Sizes
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Petite
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Maternity
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Business Casual
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-bold text-xl mb-6">Customer Service</h3>
-            <ul className="space-y-3">
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Help Center
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Returns & Exchanges
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Shipping Info
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Gift Cards
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Size Guide
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-bold text-xl mb-6">Company</h3>
-            <ul className="space-y-3">
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Careers
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Social Impact
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Press
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Tech Blog
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Investor Relations
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-bold text-xl mb-6">Connect With Us</h3>
-            <div className="flex space-x-4 mb-6">
-              <a
-                href="#"
-                className="text-gray-300 hover:text-white transition-colors"
+        {/* Mobile Accordion */}
+        <div className="md:hidden space-y-4">
+          {[
+            {
+              title: "The Service",
+              links: [
+                "Gift cards",
+                "iPhone App",
+                "Plus Sizes",
+                "Maternity",
+                "Petite",
+                "Big & Tall",
+                "Women's Jeans",
+                "Business Casual"
+              ]
+            },
+            {
+              title: "Questions?",
+              links: ["Help", "Returns"]
+            },
+            {
+              title: "The Company",
+              links: [
+                "About Us",
+                "Returns",
+                "Social Impact",
+                "Press",
+                "Investor Relations",
+                "Careers",
+                "Tech Blog",
+                "Affiliates"
+              ]
+            }
+          ].map((section, index) => (
+            <div key={section.title} className="border-b border-gray-300 pb-4">
+              <button
+                className="w-full flex justify-between items-center py-2 text-left font-bold text-lg text-black"
+                onClick={() => toggleSection(index)}
               >
-                <Facebook className="w-6 h-6" />
-              </a>
-              <a
-                href="#"
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                <Instagram className="w-6 h-6" />
-              </a>
-              <a
-                href="#"
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                <Twitter className="w-6 h-6" />
-              </a>
-              <a
-                href="#"
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                <Youtube className="w-6 h-6" />
-              </a>
-            </div>
-            <div className="space-y-4">
-              <a href="#" className="inline-block">
-                <img
-                  src="/app-store-badge.png"
-                  alt="Download on the App Store"
-                  className="h-10"
+                {section.title}
+                <ChevronDown 
+                  className={`w-5 h-5 transition-transform ${
+                    openSections.includes(index) ? 'rotate-180' : ''
+                  }`}
                 />
-              </a>
+              </button>
+              <AnimatePresence>
+                {openSections.includes(index) && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-3 pt-2">
+                      {section.links.map((link) => (
+                        <a
+                          key={link}
+                          href="#"
+                          className="block text-gray-600 hover:text-black transition-colors py-1 text-sm"
+                        >
+                          {link}
+                        </a>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </div>
+          ))}
         </div>
 
         {/* Bottom Section */}
-        <div className="mt-12 pt-8 border-t border-gray-700">
+        <div className="mt-12 pt-8 border-t border-gray-300">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-center md:text-left">
-              <p className="text-sm text-gray-400">
-                © 2025 Femimi, Inc. All rights reserved.
+              <p className="text-sm text-gray-600">
+                © 2025FFemini, Inc. All rights reserved.
               </p>
             </div>
-            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-400">
-              <a href="#" className="hover:text-white transition-colors">
-                Privacy Policy
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
+              <a href="#" className="hover:text-black transition-colors">
+                Terms of Use
               </a>
               <span>•</span>
-              <a href="#" className="hover:text-white transition-colors">
-                Terms of Service
-              </a>
-              <span>•</span>
-              <a href="#" className="hover:text-white transition-colors">
+              <a href="#" className="hover:text-black transition-colors">
                 Accessibility
               </a>
               <span>•</span>
-              <a href="#" className="hover:text-white transition-colors">
-                Cookie Preferences
+              <a href="#" className="hover:text-black transition-colors">
+                Privacy Policy
+              </a>
+              <span>•</span>
+              <a href="#" className="hover:text-black transition-colors">
+                Supply Chain Information
+              </a>
+              <span>•</span>
+              <a href="#" className="hover:text-black transition-colors">
+                Ad Choices
+              </a>
+              <span>•</span>
+              <a href="#" className="hover:text-black transition-colors">
+                Stiernap
               </a>
             </div>
+          </div>
+          <div className="text-center mt-4">
+            <p className="text-xs text-gray-500">
+             FFemini and Fix are trademarks ofFFemini, Inc.
+            </p>
           </div>
         </div>
       </div>
@@ -467,7 +363,7 @@ const FemimiApp = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
         className="text-white px-5 py-3 flex items-center justify-between"
-        style={{ backgroundColor: "#3d7c75" }}
+        style={{ backgroundColor: "#704aff" }}
       >
         <div className="flex items-center flex-1">
           <span className="text-xl mr-3">🎁</span>
@@ -499,23 +395,23 @@ const FemimiApp = () => {
           <div className="bg-white rounded-lg shadow-2xl p-8 text-center">
             <h2
               className="text-3xl font-black mb-3"
-              style={{ color: "#0f1e3d" }}
+              style={{ color: "#000000" }}
             >
               "Upload your photo,
               <br />
               get AI-styled"
             </h2>
-            <p className="text-base mb-6" style={{ color: "#0f1e3d" }}>
+            <p className="text-base mb-6" style={{ color: "#000000" }}>
               AI analyzes your skin tone and style.
               <br />
               Get personalized outfit recommendations.
             </p>
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, backgroundColor: "#614cff" }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setCurrentScreen("how-it-works")}
               className="w-full text-white font-bold py-4 px-6 rounded-full shadow-lg transition-colors text-base"
-              style={{ backgroundColor: "#ed171f" }}
+              style={{ backgroundColor: "#704aff" }}
             >
               Take the quiz, get $20 off
             </motion.button>
@@ -529,7 +425,7 @@ const FemimiApp = () => {
         viewport={{ once: true }}
         transition={{ duration: 0.8 }}
         className="px-5 py-16"
-        style={{ backgroundColor: "#3d7c75" }}
+        style={{ backgroundColor: "#ffffff" }}
       >
         <div className="text-center">
           <motion.h3
@@ -539,7 +435,7 @@ const FemimiApp = () => {
             viewport={{ once: true }}
             custom={0}
             className="text-5xl font-black mb-3"
-            style={{ color: "#c4f566" }}
+            style={{ color: "#000000" }}
           >
             TRY US OUT
           </motion.h3>
@@ -549,7 +445,7 @@ const FemimiApp = () => {
             whileInView="visible"
             viewport={{ once: true }}
             custom={1}
-            className="text-3xl font-bold text-white mb-4"
+            className="text-3xl font-bold text-black mb-4"
           >
             (ON THE HOUSE)
           </motion.p>
@@ -559,7 +455,7 @@ const FemimiApp = () => {
             whileInView="visible"
             viewport={{ once: true }}
             custom={2}
-            className="text-xl text-white mb-16"
+            className="text-xl text-black mb-16"
           >
             No risk, all style—try it free
           </motion.p>
@@ -580,15 +476,16 @@ const FemimiApp = () => {
                   whileInView={{ scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                  className="w-16 h-16 bg-white rounded-full flex items-center justify-center"
+                  className="w-16 h-16 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: "#704aff" }}
                 >
-                  <Clock className="w-8 h-8" style={{ color: "#3d7c75" }} />
+                  <Clock className="w-8 h-8 text-white" />
                 </motion.div>
               </div>
-              <h4 className="text-2xl font-bold text-white mb-3">
+              <h4 className="text-2xl font-bold text-black mb-3">
                 Shop less, live more
               </h4>
-              <p className="text-white text-lg">
+              <p className="text-black text-lg">
                 Save 40+ shopping hours a year— that's more time for what you
                 love
               </p>
@@ -609,18 +506,16 @@ const FemimiApp = () => {
                   whileInView={{ scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ type: "spring", stiffness: 200, delay: 0.4 }}
-                  className="w-16 h-16 bg-white rounded-full flex items-center justify-center"
+                  className="w-16 h-16 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: "#704aff" }}
                 >
-                  <DollarSign
-                    className="w-8 h-8"
-                    style={{ color: "#3d7c75" }}
-                  />
+                  <DollarSign className="w-8 h-8 text-white" />
                 </motion.div>
               </div>
-              <h4 className="text-2xl font-bold text-white mb-3">
+              <h4 className="text-2xl font-bold text-black mb-3">
                 Fits your budget
               </h4>
-              <p className="text-white text-lg">
+              <p className="text-black text-lg">
                 Your Stylist sends pieces within your price range— plus, keep 5+
                 items and save 20%
               </p>
@@ -641,15 +536,16 @@ const FemimiApp = () => {
                   whileInView={{ scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ type: "spring", stiffness: 200, delay: 0.6 }}
-                  className="w-16 h-16 bg-white rounded-full flex items-center justify-center"
+                  className="w-16 h-16 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: "#704aff" }}
                 >
-                  <Shirt className="w-8 h-8" style={{ color: "#3d7c75" }} />
+                  <Shirt className="w-8 h-8 text-white" />
                 </motion.div>
               </div>
-              <h4 className="text-2xl font-bold text-white mb-3">
+              <h4 className="text-2xl font-bold text-black mb-3">
                 No risk, all style
               </h4>
-              <p className="text-white text-lg">
+              <p className="text-black text-lg">
                 Try us free for your First Fix! Plus, flexible buy now, pay
                 later options
               </p>
@@ -662,11 +558,11 @@ const FemimiApp = () => {
             whileInView="visible"
             viewport={{ once: true }}
             custom={6}
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, backgroundColor: "#614cff" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setCurrentScreen("how-it-works")}
-            className="mt-12 px-8 py-4 bg-white rounded-full font-bold text-lg shadow-lg"
-            style={{ color: "#3d7c75" }}
+            className="mt-12 px-8 py-4 rounded-full font-bold text-lg shadow-lg text-white"
+            style={{ backgroundColor: "#704aff" }}
           >
             Let's get started
           </motion.button>
@@ -689,7 +585,7 @@ const FemimiApp = () => {
           whileHover={{ scale: 1.05 }}
           onClick={() => setCurrentScreen("home")}
           className="mb-8 font-bold flex items-center"
-          style={{ color: "#0f1e3d" }}
+          style={{ color: "#000000" }}
         >
           ← Back
         </motion.button>
@@ -700,7 +596,7 @@ const FemimiApp = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
           className="py-16 rounded-2xl mb-8"
-          style={{ backgroundColor: "#3d7c75" }}
+          style={{ backgroundColor: "#ffffff" }}
         >
           <div className="text-center px-5">
             <motion.h2
@@ -710,7 +606,7 @@ const FemimiApp = () => {
               viewport={{ once: true }}
               custom={0}
               className="text-5xl font-black mb-3"
-              style={{ color: "#c4f566" }}
+              style={{ color: "#000000" }}
             >
               TRY US OUT
             </motion.h2>
@@ -720,7 +616,7 @@ const FemimiApp = () => {
               whileInView="visible"
               viewport={{ once: true }}
               custom={1}
-              className="text-3xl font-bold text-white mb-4"
+              className="text-3xl font-bold text-black mb-4"
             >
               (ON THE HOUSE)
             </motion.p>
@@ -730,7 +626,7 @@ const FemimiApp = () => {
               whileInView="visible"
               viewport={{ once: true }}
               custom={2}
-              className="text-xl text-white"
+              className="text-xl text-black"
             >
               No risk, all style—try it free
             </motion.p>
@@ -758,7 +654,7 @@ const FemimiApp = () => {
                   width="80"
                   height="60"
                   fill="none"
-                  stroke="#c4f566"
+                  stroke="#704aff"
                   strokeWidth="3"
                   rx="5"
                 />
@@ -770,17 +666,17 @@ const FemimiApp = () => {
                   y1="45"
                   x2="70"
                   y2="45"
-                  stroke="#c4f566"
+                  stroke="#704aff"
                   strokeWidth="2"
                 />
               </svg>
               <h3
                 className="text-2xl font-black mb-4"
-                style={{ color: "#c4f566" }}
+                style={{ color: "#000000" }}
               >
                 1. Take your style quiz
               </h3>
-              <p className="text-white text-base leading-relaxed max-w-md mx-auto">
+              <p className="text-black text-base leading-relaxed max-w-md mx-auto">
                 Upload your photo and tell us about your preferences—the more we
                 know, the better our AI can recommend outfits that match your
                 skin tone and style.
@@ -807,17 +703,17 @@ const FemimiApp = () => {
                   transition={{ duration: 1.5, ease: "easeInOut" }}
                   d="M 40 30 Q 40 20, 50 20 L 70 20 Q 80 20, 80 30 L 80 50 Q 60 70, 40 50 Z"
                   fill="none"
-                  stroke="#c4f566"
+                  stroke="#704aff"
                   strokeWidth="3"
                 />
               </svg>
               <h3
                 className="text-2xl font-black mb-4"
-                style={{ color: "#c4f566" }}
+                style={{ color: "#000000" }}
               >
                 2. Get AI-powered recommendations
               </h3>
-              <p className="text-white text-base leading-relaxed max-w-md mx-auto">
+              <p className="text-black text-base leading-relaxed max-w-md mx-auto">
                 Our AI analyzes your photo and preferences to suggest clothes
                 that complement your skin tone and personal style perfectly.
               </p>
@@ -846,7 +742,7 @@ const FemimiApp = () => {
                   width="60"
                   height="80"
                   fill="none"
-                  stroke="#c4f566"
+                  stroke="#704aff"
                   strokeWidth="3"
                   rx="5"
                 />
@@ -858,17 +754,17 @@ const FemimiApp = () => {
                   y1="35"
                   x2="75"
                   y2="35"
-                  stroke="#c4f566"
+                  stroke="#704aff"
                   strokeWidth="2"
                 />
               </svg>
               <h3
                 className="text-2xl font-black mb-4"
-                style={{ color: "#c4f566" }}
+                style={{ color: "#000000" }}
               >
                 3. Virtual try-on & buy
               </h3>
-              <p className="text-white text-base leading-relaxed max-w-md mx-auto">
+              <p className="text-black text-base leading-relaxed max-w-md mx-auto">
                 See how clothes look on you with our virtual try-on powered by
                 Aazmao. Love it? Buy it directly through our integrated shopping
                 platform.
@@ -882,11 +778,11 @@ const FemimiApp = () => {
           initial="hidden"
           animate="visible"
           custom={6}
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.05, backgroundColor: "#614cff" }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setCurrentScreen("category-select")}
-          className="w-full font-black py-4 px-6 rounded-full shadow-lg transition-colors text-lg"
-          style={{ backgroundColor: "#c4f566", color: "#0f1e3d" }}
+          className="w-full font-black py-4 px-6 rounded-full shadow-lg transition-colors text-lg text-white"
+          style={{ backgroundColor: "#704aff" }}
         >
           Let's get started
         </motion.button>
@@ -906,7 +802,7 @@ const FemimiApp = () => {
         whileHover={{ scale: 1.05 }}
         onClick={() => setCurrentScreen("how-it-works")}
         className="mb-8 font-bold"
-        style={{ color: "#0f1e3d" }}
+        style={{ color: "#000000" }}
       >
         ← Back
       </motion.button>
@@ -941,7 +837,7 @@ const FemimiApp = () => {
         animate="visible"
         custom={1}
         className="text-2xl font-black mb-6"
-        style={{ color: "#0f1e3d" }}
+        style={{ color: "#000000" }}
       >
         What can we style you for?
       </motion.h2>
@@ -959,14 +855,14 @@ const FemimiApp = () => {
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 + i * 0.1 }}
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.02, backgroundColor: "#f8f9fa" }}
             whileTap={{ scale: 0.98 }}
             onClick={() => {
               setSelectedCategory(category);
               setCurrentScreen("email");
             }}
             className="w-full bg-white border-2 font-bold py-4 px-6 rounded-full transition-all shadow-sm hover:shadow-md text-lg"
-            style={{ borderColor: "#0f1e3d", color: "#0f1e3d" }}
+            style={{ borderColor: "#000000", color: "#000000" }}
           >
             {category}
           </motion.button>
@@ -979,7 +875,7 @@ const FemimiApp = () => {
         animate="visible"
         custom={3}
         className="text-center text-sm"
-        style={{ color: "#0f1e3d" }}
+        style={{ color: "#000000" }}
       >
         Already have an account?{" "}
         <a href="#" className="font-bold hover:underline">
@@ -1001,7 +897,7 @@ const FemimiApp = () => {
         whileHover={{ scale: 1.05 }}
         onClick={() => setCurrentScreen("category-select")}
         className="mb-12 font-bold"
-        style={{ color: "#0f1e3d" }}
+        style={{ color: "#000000" }}
       >
         ← Back
       </motion.button>
@@ -1012,22 +908,17 @@ const FemimiApp = () => {
         animate="visible"
         custom={0}
       >
-        <h2 className="text-3xl font-black mb-8" style={{ color: "#0f1e3d" }}>
+        <h2 className="text-3xl font-black mb-8" style={{ color: "#000000" }}>
           Before we begin, what's your email?
         </h2>
 
-        <motion.input
-          variants={fadeInUp}
-          initial="hidden"
-          animate="visible"
-          custom={1}
-          whileFocus={{ scale: 1.01 }}
+        <input
           type="email"
           placeholder="email@example.com"
           value={formData.email}
           onChange={(e) => handleInputChange("email", e.target.value)}
-          className="w-full px-0 py-4 border-b-2 text-lg focus:outline-none transition-colors mb-6"
-          style={{ borderColor: "#0f1e3d", color: "#0f1e3d" }}
+          className="w-full px-0 py-4 border-b-2 text-lg focus:outline-none transition-colors mb-6 bg-transparent"
+          style={{ borderColor: "#000000", color: "#000000" }}
         />
 
         <motion.p
@@ -1036,9 +927,9 @@ const FemimiApp = () => {
           animate="visible"
           custom={2}
           className="text-sm mb-8"
-          style={{ color: "#0f1e3d" }}
+          style={{ color: "#000000" }}
         >
-          By continuing, you accept Femimi's{" "}
+          By continuing, you acceptFFemini's{" "}
           <a href="#" className="underline font-bold">
             Terms of Use
           </a>{" "}
@@ -1054,14 +945,14 @@ const FemimiApp = () => {
           initial="hidden"
           animate="visible"
           custom={3}
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.05, backgroundColor: "#614cff" }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setCurrentScreen("name")}
           disabled={!formData.email.trim()}
           className={`w-full text-white font-black py-4 px-6 rounded-full shadow-lg transition-colors mb-8 text-lg ${
             !formData.email.trim() ? "opacity-50 cursor-not-allowed" : ""
           }`}
-          style={{ backgroundColor: "#3d7c75" }}
+          style={{ backgroundColor: "#704aff" }}
         >
           Continue
         </motion.button>
@@ -1073,24 +964,24 @@ const FemimiApp = () => {
           custom={4}
           className="text-center"
         >
-          <p className="mb-6 font-bold" style={{ color: "#0f1e3d" }}>
+          <p className="mb-6 font-bold" style={{ color: "#000000" }}>
             Or continue with
           </p>
           <div className="flex gap-3 justify-center">
             {[
-              { name: "Apple", icon: "🍎" },
-              { name: "Google", icon: "G" },
-              { name: "Facebook", icon: "f" },
+              { name: "Apple", icon: "🌤" },
+              { name: "Google", icon: "🍹" },
+              { name: "Facebook", icon: "🏺" },
             ].map((provider, i) => (
               <motion.button
                 key={provider.name}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.6 + i * 0.1 }}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, backgroundColor: "#f8f9fa" }}
                 whileTap={{ scale: 0.95 }}
                 className="bg-white border-2 font-bold py-3 px-6 rounded-full shadow-sm hover:shadow-md transition-all"
-                style={{ borderColor: "#0f1e3d", color: "#0f1e3d" }}
+                style={{ borderColor: "#000000", color: "#000000" }}
               >
                 <span className="text-lg">{provider.icon}</span>
               </motion.button>
@@ -1104,7 +995,7 @@ const FemimiApp = () => {
           animate="visible"
           custom={5}
           className="text-center text-sm mt-8"
-          style={{ color: "#0f1e3d" }}
+          style={{ color: "#000000" }}
         >
           Already have an account?{" "}
           <a href="#" className="font-bold hover:underline">
@@ -1127,7 +1018,7 @@ const FemimiApp = () => {
         whileHover={{ scale: 1.05 }}
         onClick={() => setCurrentScreen("email")}
         className="mb-12 font-bold"
-        style={{ color: "#0f1e3d" }}
+        style={{ color: "#000000" }}
       >
         ← Back
       </motion.button>
@@ -1138,22 +1029,17 @@ const FemimiApp = () => {
         animate="visible"
         custom={0}
       >
-        <h2 className="text-3xl font-black mb-8" style={{ color: "#0f1e3d" }}>
+        <h2 className="text-3xl font-black mb-8" style={{ color: "#000000" }}>
           What's your first name?
         </h2>
 
-        <motion.input
-          variants={fadeInUp}
-          initial="hidden"
-          animate="visible"
-          custom={1}
-          whileFocus={{ scale: 1.01 }}
+        <input
           type="text"
           placeholder="First Name"
           value={formData.firstName}
           onChange={(e) => handleInputChange("firstName", e.target.value)}
-          className="w-full px-0 py-4 border-b-2 text-lg focus:outline-none transition-colors mb-8"
-          style={{ borderColor: "#0f1e3d", color: "#0f1e3d" }}
+          className="w-full px-0 py-4 border-b-2 text-lg focus:outline-none transition-colors mb-8 bg-transparent"
+          style={{ borderColor: "#000000", color: "#000000" }}
         />
 
         <motion.button
@@ -1161,14 +1047,14 @@ const FemimiApp = () => {
           initial="hidden"
           animate="visible"
           custom={2}
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.05, backgroundColor: "#614cff" }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setCurrentScreen("complete")}
           disabled={!formData.firstName.trim()}
           className={`w-full text-white font-black py-4 px-6 rounded-full shadow-lg transition-colors text-lg ${
             !formData.firstName.trim() ? "opacity-50 cursor-not-allowed" : ""
           }`}
-          style={{ backgroundColor: "#3d7c75" }}
+          style={{ backgroundColor: "#704aff" }}
         >
           Continue
         </motion.button>
@@ -1196,7 +1082,7 @@ const FemimiApp = () => {
           animate={{ scale: 1, rotate: 0 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
           className="w-24 h-24 rounded-full flex items-center justify-center mb-6"
-          style={{ backgroundColor: "#3d7c75" }}
+          style={{ backgroundColor: "#704aff" }}
         >
           <span className="text-4xl text-white font-black">✓</span>
         </motion.div>
@@ -1207,7 +1093,7 @@ const FemimiApp = () => {
           animate="visible"
           custom={1}
           className="text-4xl font-black mb-4"
-          style={{ color: "#0f1e3d" }}
+          style={{ color: "#000000" }}
         >
           Nice to meet you,
           <br />
@@ -1220,7 +1106,7 @@ const FemimiApp = () => {
           animate="visible"
           custom={2}
           className="text-xl mb-8"
-          style={{ color: "#0f1e3d" }}
+          style={{ color: "#000000" }}
         >
           Let's get started with your AI styling journey.
         </motion.p>
@@ -1231,11 +1117,11 @@ const FemimiApp = () => {
         initial="hidden"
         animate="visible"
         custom={3}
-        whileHover={{ scale: 1.05 }}
+        whileHover={{ scale: 1.05, backgroundColor: "#614cff" }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setCurrentScreen("home")}
-        className="w-full font-black py-4 px-6 rounded-full shadow-lg transition-colors text-lg"
-        style={{ backgroundColor: "#c4f566", color: "#0f1e3d" }}
+        className="w-full font-black py-4 px-6 rounded-full shadow-lg transition-colors text-lg text-white"
+        style={{ backgroundColor: "#704aff" }}
       >
         Start Your Style Journey
       </motion.button>
