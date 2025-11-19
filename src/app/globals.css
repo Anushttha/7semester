@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 @import "tailwindcss";
 
 :root {
@@ -24,3 +26,36 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* For Analyzing Screen (Quantum Scan) */
+
+@keyframes scan-y {
+  0% { transform: translateY(-100%); }
+  50% { transform: translateY(100%); }
+  100% { transform: translateY(-100%); }
+}
+
+@keyframes scan-x {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes pulse-grid {
+    0% { opacity: 0.02; }
+    50% { opacity: 0.05; }
+    100% { opacity: 0.02; }
+}
+
+.animate-scan-y {
+  animation: scan-y 2.5s linear infinite;
+}
+
+.animate-scan-x {
+  animation: scan-x 2.5s linear infinite;
+}
+
+.animate-pulse-grid {
+    animation: pulse-grid 5s ease-in-out infinite;
+}
+

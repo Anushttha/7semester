@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aazmaao - Your AI Stylist</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        :root {
+            --primary: #0f0f0f;
+            --secondary: #1a1a1a;
+            --accent: #00ff9d;
+            --accent2: #9d4edd;
+            --text: #ffffff;
+            --text-secondary: #b0b0b0;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+        
+        /* Header */
+        header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 15, 15, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .logo {
+            font-weight: 800;
+            font-size: 24px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .logo-3d {
+            perspective: 500px;
+            display: inline-block;
+        }
+        
+        .logo-letter {
+            display: inline-block;
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+        }
+        
+        .header-icons {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .header-icons i {
+            font-size: 20px;
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+        
+        .header-icons i:hover {
+            color: var(--accent);
+            transform: scale(1.1);
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(157, 78, 221, 0.2) 0%, rgba(15, 15, 15, 0) 70%);
+            z-index: -1;
+        }
+        
+        .hero h1 {
+            font-size: 32px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .hero p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .avatar-container {
+            width: 280px;
+            height: 350px;
+            margin: 0 auto 30px;
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transform: translateY(50px);
+            opacity: 0;
+            animation: slideUp 0.8s ease forwards 0.3s;
+        }
+        
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .avatar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px;
+        }
+        
+        .avatar-placeholder {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        
+        .avatar-placeholder i {
+            font-size: 60px;
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+        
+        .cta-button {
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 255, 157, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 255, 157, 0.5);
+        }
+        
+        .cta-button:active {
+            transform: translateY(1px);
+        }
+        
+        .cta-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .cta-button:hover::after {
+            left: 100%;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 40px 20px;
+        }
+        
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 2px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .feature-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: rgba(0, 255, 157, 0.2);
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+            color: var(--primary);
+        }
+        
+        .feature-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .feature-card p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* How It Works */
+        .how-it-works {
+            padding: 40px 20px;
+        }
+        
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .step:hover {
+            transform: translateX(5px);
+            border-color: rgba(157, 78, 221, 0.3);
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 15px;
+            flex-shrink: 0;
+            color: var(--primary);
+        }
+        
+        .step-content h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .step-content p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* Categories */
+        .categories {
+            padding: 40px 20px;
+        }
+        
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .category-card {
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            height: 150px;
+            transition: all 0.3s ease;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .category-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .category-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+        }
+        
+        .category-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        /* Trending Products */
+        .trending {
+            padding: 40px 20px;
+        }
+        
+        .products-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+            padding: 10px 5px;
+            margin-top: 20px;
+            scrollbar-width: none;
+        }
+        
+        .products-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .product-card {
+            min-width: 180px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .product-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        
+        .product-info {
+            padding: 15px;
+        }
+        
+        .product-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .product-price {
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+        
+        .product-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn-try {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-try:hover {
+            background: var(--accent);
+            color: var(--primary);
+        }
+        
+        .btn-buy {
+            background: var(--accent2);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-buy:hover {
+            background: #8a2be2;
+        }
+        
+        /* Footer */
+        footer {
+            background: rgba(10, 10, 10, 0.9);
+            padding: 30px 20px;
+            margin-top: 40px;
+            border-top: 1px solid var(--glass-border);
+        }
+        
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .footer-logo {
+            font-weight: 800;
+            font-size: 24px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .footer-links {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .footer-column h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .footer-column a {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 10px;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-column a:hover {
+            color: var(--accent);
+        }
+        
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .social-icons a {
+            width: 36px;
+            height: 36px;
+            background: var(--glass);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+        
+        .social-icons a:hover {
+            background: var(--accent);
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+        
+        /* Navigation Bar */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(15, 15, 15, 0.9);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-item.active {
+            color: var(--accent);
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-item.active .nav-icon {
+            transform: translateY(-5px);
+        }
+        
+        .nav-label {
+            font-size: 10px;
+            font-weight: 500;
+        }
+        
+        .nav-indicator {
+            position: absolute;
+            top: -10px;
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .nav-item.active .nav-indicator {
+            opacity: 1;
+        }
+        
+        /* 3D Container */
+        #logo-3d-container {
+            width: 100%;
+            height: 200px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Scroll Animations */
+        .scroll-animate {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        
+        .scroll-animate.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Upload Section */
+        .upload-section {
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--glass-border);
+            border-radius: 20px;
+            padding: 40px 20px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 157, 0.05);
+        }
+        
+        .upload-icon {
+            font-size: 50px;
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+        
+        .upload-text {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .upload-subtext {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 28px;
+            }
+            
+            .avatar-container {
+                width: 250px;
+                height: 320px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .categories-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <div class="logo-3d">
+                    <span class="logo-letter">A</span>
+                    <span class="logo-letter">a</span>
+                    <span class="logo-letter">z</span>
+                    <span class="logo-letter">m</span>
+                    <span class="logo-letter">a</span>
+                    <span class="logo-letter">a</span>
+                    <span class="logo-letter">o</span>
+                </div>
+            </div>
+            <div class="header-icons">
+                <i class="fas fa-search"></i>
+                <i class="fas fa-shopping-bag"></i>
+            </div>
+        </header>
+        
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-bg"></div>
+            <h1>Your Style. Your Mood. Your AI Stylist.</h1>
+            <p>Discover perfect outfits with AI-powered virtual try-on technology</p>
+            
+            <div class="avatar-container">
+                <div class="avatar">
+                    <div class="avatar-placeholder">
+                        <i class="fas fa-user-circle"></i>
+                        <p>Upload your photo to try outfits</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="cta-button">Try with AI</button>
+        </section>
+        
+        <!-- Upload Section -->
+        <section class="upload-section scroll-animate">
+            <h2 class="section-title">Get Started</h2>
+            <div class="upload-area">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">Upload Your Photo</div>
+                <div class="upload-subtext">Tap to upload or take a photo</div>
+            </div>
+            <p>Our AI will analyze your body type and skin tone to recommend perfect outfits</p>
+        </section>
+        
+        <!-- Features Section -->
+        <section class="features scroll-animate">
+            <h2 class="section-title">Why Aazmaao?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-tshirt"></i>
+                    </div>
+                    <h3>Virtual Try-On</h3>
+                    <p>See how clothes look on you before buying</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>AI Stylist</h3>
+                    <p>Personalized recommendations based on your preferences</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-ruler-combined"></i>
+                    </div>
+                    <h3>Perfect Fit</h3>
+                    <p>Accurate size recommendations for your body type</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <h3>Skin Tone Match</h3>
+                    <p>Colors that complement your complexion</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- How It Works -->
+        <section class="how-it-works scroll-animate">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Upload Your Photo</h3>
+                        <p>Take a clear full-body photo or upload from your gallery</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>AI Analysis</h3>
+                        <p>Our AI detects your body type, measurements and skin tone</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Get Recommendations</h3>
+                        <p>Receive personalized outfit suggestions based on mood & occasion</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Virtual Try-On</h3>
+                        <p>See how the outfits look on you in real-time</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h3>Shop & Buy</h3>
+                        <p>Purchase your favorite looks directly from our store</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 3D Logo Section -->
+        <div id="logo-3d-container"></div>
+        
+        <!-- Categories -->
+        <section class="categories scroll-animate">
+            <h2 class="section-title">Shop By Category</h2>
+            <div class="categories-grid">
+                <div class="category-card">
+                    <img src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Men's Fashion" class="category-img">
+                    <div class="category-overlay">
+                        <div class="category-name">Men's Fashion</div>
+                    </div>
+                </div>
+                <div class="category-card">
+                    <img src="https://images.unsplash.com/photo-1499952127939-9bbf5af6c51c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Women's Fashion" class="category-img">
+                    <div class="category-overlay">
+                        <div class="category-name">Women's Fashion</div>
+                    </div>
+                </div>
+                <div class="category-card">
+                    <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Accessories" class="category-img">
+                    <div class="category-overlay">
+                        <div class="category-name">Accessories</div>
+                    </div>
+                </div>
+                <div class="category-card">
+                    <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Footwear" class="category-img">
+                    <div class="category-overlay">
+                        <div class="category-name">Footwear</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Trending Products -->
+        <section class="trending scroll-animate">
+            <h2 class="section-title">Trending Now</h2>
+            <div class="products-scroll">
+                <div class="product-card">
+                    <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Gucci Hoodie" class="product-img">
+                    <div class="product-info">
+                        <div class="product-name">Gucci Hoodie</div>
+                        <div class="product-price">$60.00</div>
+                        <div class="product-actions">
+                            <button class="btn-try">Try On</button>
+                            <button class="btn-buy">Buy Now</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Sunglasses" class="product-img">
+                    <div class="product-info">
+                        <div class="product-name">Designer Sunglasses</div>
+                        <div class="product-price">$35.00</div>
+                        <div class="product-actions">
+                            <button class="btn-try">Try On</button>
+                            <button class="btn-buy">Buy Now</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="T-Shirt" class="product-img">
+                    <div class="product-info">
+                        <div class="product-name">Premium T-Shirt</div>
+                        <div class="product-price">$26.00</div>
+                        <div class="product-actions">
+                            <button class="btn-try">Try On</button>
+                            <button class="btn-buy">Buy Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <footer class="scroll-animate">
+            <div class="footer-content">
+                <div class="footer-logo">Aazmaao</div>
+                
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h3>Shop</h3>
+                        <a href="#">Men</a>
+                        <a href="#">Women</a>
+                        <a href="#">Accessories</a>
+                        <a href="#">New Arrivals</a>
+                    </div>
+                    <div class="footer-column">
+                        <h3>Help</h3>
+                        <a href="#">FAQ</a>
+                        <a href="#">Shipping</a>
+                        <a href="#">Returns</a>
+                        <a href="#">Size Guide</a>
+                    </div>
+                    <div class="footer-column">
+                        <h3>About</h3>
+                        <a href="#">Our Story</a>
+                        <a href="#">Careers</a>
+                        <a href="#">Terms & Conditions</a>
+                        <a href="#">Privacy Policy</a>
+                    </div>
+                    <div class="footer-column">
+                        <h3>Connect</h3>
+                        <div class="social-icons">
+                            <a href="#"><i class="fab fa-instagram"></i></a>
+                            <a href="#"><i class="fab fa-tiktok"></i></a>
+                            <a href="#"><i class="fab fa-twitter"></i></a>
+                            <a href="#"><i class="fab fa-youtube"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2023 Aazmaao. All rights reserved.
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <a href="#" class="nav-item active">
+            <div class="nav-indicator"></div>
+            <i class="fas fa-home nav-icon"></i>
+            <span class="nav-label">Home</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-indicator"></div>
+            <i class="fas fa-tshirt nav-icon"></i>
+            <span class="nav-label">Try-On</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-indicator"></div>
+            <i class="fas fa-compass nav-icon"></i>
+            <span class="nav-label">Explore</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-indicator"></div>
+            <i class="fas fa-archive nav-icon"></i>
+            <span class="nav-label">My Closet</span>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-indicator"></div>
+            <i class="fas fa-user nav-icon"></i>
+            <span class="nav-label">Profile</span>
+        </a>
+    </nav>
+
+    <script>
+        // Scroll animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize scroll animations
+            const scrollElements = document.querySelectorAll('.scroll-animate');
+            
+            const elementInView = (el, dividend = 1) => {
+                const elementTop = el.getBoundingClientRect().top;
+                return (
+                    elementTop <= (window.innerHeight || document.documentElement.clientHeight) / dividend
+                );
+            };
+            
+            const displayScrollElement = (element) => {
+                element.classList.add('visible');
+            };
+            
+            const handleScrollAnimation = () => {
+                scrollElements.forEach((el) => {
+                    if (elementInView(el, 1.2)) {
+                        displayScrollElement(el);
+                    }
+                });
+            };
+            
+            // Initial check
+            handleScrollAnimation();
+            
+            // Listen for scroll events
+            window.addEventListener('scroll', () => {
+                handleScrollAnimation();
+            });
+            
+            // Logo 3D animation on hover
+            const logoLetters = document.querySelectorAll('.logo-letter');
+            logoLetters.forEach((letter, index) => {
+                letter.addEventListener('mouseover', () => {
+                    letter.style.transform = `rotateX(20deg) rotateY(10deg) translateZ(10px)`;
+                    setTimeout(() => {
+                        letter.style.transform = '';
+                    }, 500);
+                });
+            });
+            
+            // CTA button animation
+            const ctaButton = document.querySelector('.cta-button');
+            ctaButton.addEventListener('click', function() {
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 200);
+            });
+            
+            // Navigation active state
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // Simple 3D effect for logo container
+            const logo3dContainer = document.getElementById('logo-3d-container');
+            if (logo3dContainer) {
+                // Create a simple 3D text effect with CSS
+                logo3dContainer.innerHTML = `
+                    <div style="font-size: 48px; font-weight: 800; text-transform: uppercase; 
+                    background: linear-gradient(135deg, #00ff9d, #9d4edd); 
+                    -webkit-background-clip: text; background-clip: text; color: transparent;
+                    transform: perspective(500px) rotateX(15deg); text-align: center;">
+                        Aazmaao
+                    </div>
+                    <div style="font-size: 16px; margin-top: 15px; text-align: center; color: #b0b0b0;">
+                        Your AI Stylist
+                    </div>
+                `;
+            }
+            
+            // Upload area interaction
+            const uploadArea = document.querySelector('.upload-area');
+            uploadArea.addEventListener('click', function() {
+                this.style.borderColor = '#00ff9d';
+                this.style.backgroundColor = 'rgba(0, 255, 157, 0.1)';
+                setTimeout(() => {
+                    this.style.borderColor = '';
+                    this.style.backgroundColor = '';
+                }, 1000);
+                
+                // In a real app, this would trigger file upload
+                alert('In the actual app, this would open your camera or photo gallery');
+            });
+        });
+        
+        // GSAP animations for enhanced effects
+        gsap.registerPlugin(ScrollTrigger);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate logo on scroll
+            gsap.to('.logo', {
+                scrollTrigger: {
+                    trigger: '.hero',
+                    start: 'top top',
+                    end: 'bottom top',
+                    scrub: true
+                },
+                y: -50,
+                opacity: 0.7,
+                scale: 0.9
+            });
+            
+            // Parallax effect for hero background
+            gsap.to('.hero-bg', {
+                scrollTrigger: {
+                    trigger: '.hero',
+                    start: 'top bottom',
+                    end: 'bottom top',
+                    scrub: true
+                },
+                y: 100
+            });
+            
+            // Stagger animation for feature cards
+            gsap.from('.feature-card', {
+                scrollTrigger: {
+                    trigger: '.features',
+                    start: 'top 80%',
+                    end: 'bottom 20%',
+                    toggleActions: 'play none none reverse'
+                },
+                y: 50,
+                opacity: 0,
+                stagger: 0.1,
+                duration: 0.8
+            });
+            
+            // Stagger animation for steps
+            gsap.from('.step', {
+                scrollTrigger: {
+                    trigger: '.how-it-works',
+                    start: 'top 80%',
+                    end: 'bottom 20%',
+                    toggleActions: 'play none none reverse'
+                },
+                x: -50,
+                opacity: 0,
+                stagger: 0.2,
+                duration: 0.6
+            });
+        });
+    </script>
+</body>
+</html>
