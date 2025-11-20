@@ -285,6 +285,65 @@ const Onboarding = ({ onNext }) => {
 // --- 2. UPDATED AUTH SCREEN (Luxe & Extraordinary) ---
 // --- 2. UPDATED AUTH SCREEN (Fixed) ---
 // --- 2. UPDATED AUTH SCREEN (White Luxe + Purple/Green Gradient) ---
+// --- ULTRA-SMOOTH INPUT COMPONENT (Moved outside to fix focus bug) ---
+// --- ULTRA-SMOOTH INPUT COMPONENT (Preserved & Polished) ---
+const LuxeInput = ({ label, type, value, onChange, icon: Icon, isPassword = false, delay, showPassword, setShowPassword }) => {
+  const [focused, setFocused] = useState(false);
+  const hasValue = value && value.length > 0;
+  
+  if (!Icon) return null;
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: delay, type: "spring", stiffness: 300, damping: 24 }}
+      className="relative mb-6 group"
+    >
+      {/* Icon */}
+      <div className={`absolute left-0 top-4 transition-colors duration-500 ${focused ? 'text-[#5a00e0]' : 'text-[#1a1a1a]/40'}`}>
+         <Icon size={22} strokeWidth={1.5} />
+      </div>
+
+      {/* Input Field - Professional Font Settings */}
+      <input 
+        type={isPassword ? (showPassword ? "text" : "password") : type}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        className="peer w-full border-b border-gray-200 bg-transparent py-4 pl-10 pr-10 text-[#1a1a1a] text-lg outline-none transition-all duration-300 placeholder-transparent font-medium tracking-tight"
+        placeholder={label} 
+      />
+      
+      {/* Floating Label */}
+      <label 
+        className={`absolute left-10 pointer-events-none transition-all duration-300 ease-out origin-left font-inter
+        ${(focused || hasValue) 
+          ? "-top-2 text-[10px] font-bold text-[#5a00e0] tracking-[0.2em] uppercase" 
+          : "top-4 text-base text-gray-400 font-normal tracking-wide"}`}
+      >
+        {label}
+      </label>
+
+      {/* Password Toggle */}
+      {isPassword && (
+          <button 
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-0 top-4 text-gray-300 hover:text-[#5a00e0] transition-colors"
+          >
+              {showPassword ? <EyeOff size={20} strokeWidth={1.5} /> : <Eye size={20} strokeWidth={1.5} />}
+          </button>
+      )}
+
+      {/* Animated Bottom Border */}
+      <div className={`absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-[#5a00e0] to-[#8b5cf6] transition-transform duration-500 origin-left ${focused ? 'scale-x-100' : 'scale-x-0'}`}></div>
+    </motion.div>
+  );
+};
+
+// --- 2. UPDATED AUTH SCREEN (Jaw-Dropping Typography) ---
 const Auth = ({ onComplete }) => {
   const [isLogin, setIsLogin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -296,123 +355,68 @@ const Auth = ({ onComplete }) => {
     setTimeout(() => onComplete(formData.name || 'Style Icon'), 500);
   };
 
-  // --- Ultra-Smooth Input Component ---
-  const LuxeInput = ({ label, type, value, onChange, icon: Icon, isPassword = false, delay }) => {
-    const [focused, setFocused] = useState(false);
-    const hasValue = value && value.length > 0;
-    
-    // Safety check for Icon
-    if (!Icon) return null;
-
-    return (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: delay, type: "spring", stiffness: 300, damping: 24 }}
-        className="relative mb-6 group"
-      >
-        {/* Icon: Changes color on focus */}
-        <div className={`absolute left-0 top-4 transition-colors duration-500 ${focused ? 'text-[#5a00e0]' : 'text-black'}`}>
-           <Icon size={22} strokeWidth={1.5} />
-        </div>
-
-        {/* Input Field */}
-        <input 
-          type={isPassword ? (showPassword ? "text" : "password") : type}
-          value={value}
-          onChange={onChange}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          className="peer w-full border-b border-gray-100 bg-transparent py-4 pl-10 pr-10 text-[#1a1a1a] text-lg outline-none transition-all duration-300 placeholder-transparent font-medium"
-          placeholder={label} 
-        />
-        
-        {/* Floating Label (Physics based) */}
-        <label 
-          className={`absolute left-10 pointer-events-none transition-all duration-300 ease-out origin-left 
-          ${(focused || hasValue) 
-            ? "-top-2 text-xs font-bold text-[#5a00e0] tracking-widest uppercase" 
-            : "top-4 text-base text-gray-400 font-normal"}`}
-        >
-          {label}
-        </label>
-
-        {/* Password Toggle */}
-        {isPassword && (
-            <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-0 top-4 text-gray-300 hover:text-[#5a00e0] transition-colors"
-            >
-                {showPassword ? <EyeOff size={20} strokeWidth={1.5} /> : <Eye size={20} strokeWidth={1.5} />}
-            </button>
-        )}
-
-        {/* Animated Bottom Border (Purple to Green Gradient) */}
-        <div className={`absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-[#5a00e0] to-[#00ff9d] transition-transform duration-500 origin-left ${focused ? 'scale-x-100' : 'scale-x-0'}`}></div>
-      </motion.div>
-    );
-  };
-
   return (
     <div className="w-full h-full bg-white relative overflow-hidden flex flex-col items-center justify-center font-inter">
       
-      {/* --- 1. LUXE ATMOSPHERE (Purple & Green Auroras) --- */}
+      {/* --- 1. LUXE ATMOSPHERE --- */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Purple Orb */}
         <motion.div 
-            animate={{ 
-                x: [0, 50, 0], 
-                y: [0, -50, 0],
-                scale: [1, 1.2, 1]
-            }}
+            animate={{ x: [0, 50, 0], y: [0, -50, 0], scale: [1, 1.2, 1] }}
             transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
             className="absolute -top-[10%] -left-[10%] w-[500px] h-[500px] bg-[#5a00e0]/10 rounded-full blur-[100px]" 
         />
-        
-        {/* Green Orb (The "Emerald" touch) */}
         <motion.div 
-            animate={{ 
-                x: [0, -30, 0], 
-                y: [0, 60, 0],
-                scale: [1, 1.3, 1]
-            }}
+            animate={{ x: [0, -30, 0], y: [0, 60, 0], scale: [1, 1.3, 1] }}
             transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
             className="absolute top-[30%] -right-[20%] w-[400px] h-[400px] bg-[#00ff9d]/15 rounded-full blur-[90px]" 
         />
-        
-        {/* Noise Texture */}
         <div className="absolute inset-0 opacity-[0.4] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-soft-light"></div>
       </div>
 
       {/* --- 2. CONTENT CONTAINER --- */}
-      <motion.div 
-        layout
-        className="relative z-10 w-full max-w-[360px] px-6"
-      >
+      <motion.div layout className="relative z-10 w-full max-w-[360px] px-6">
+         
          {/* Typography Header */}
-         <div className="mb-12">
+         <div className="mb-12 relative">
              <motion.h1 
                 layout
-                className="font-playfair text-[3.5rem] leading-[0.95] font-black tracking-tighter text-[#1a1a1a] mb-3"
+                className="font-playfair text-[3.5rem] leading-[0.95] text-[#1a1a1a] mb-3 relative z-10"
              >
                 <AnimatePresence mode="wait">
-                    <motion.span
-                        key={isLogin ? "login" : "signup"}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="block"
-                    >
-                       {isLogin ? 'Welcome Back.' : (formData.name ? `Hello, ${formData.name.split(' ')[0]}` : 'Join Aazmaao.')}
-                    </motion.span>
+                    {isLogin ? (
+                        <motion.span
+                            key="login"
+                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                            className="block font-black tracking-tighter"
+                        >
+                            Welcome <br/> <span className="italic font-medium text-[#5a00e0]">Back.</span>
+                        </motion.span>
+                    ) : (
+                        <motion.span
+                            key="signup"
+                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                            className="block font-black tracking-tighter"
+                        >
+                            {formData.name ? (
+                                <>
+                                    Hello, <br/> 
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5a00e0] via-[#7c3aed] to-[#5a00e0] italic font-bold tracking-normal">
+                                        {formData.name.split(' ')[0]}
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    Join <br/> 
+                                    <span className="text-[#5a00e0]">Aazmaao.</span>
+                                </>
+                            )}
+                        </motion.span>
+                    )}
                 </AnimatePresence>
              </motion.h1>
-             <motion.p 
-                layout
-                className="text-gray-500 text-sm font-medium tracking-wide"
-             >
-                {isLogin ? 'Sign in to access your wardrobe.' : 'Create your style profile.'}
+             
+             <motion.p layout className="text-gray-500 text-sm font-medium tracking-wide">
+                {isLogin ? 'Sign in to access your wardrobe.' : 'Create your unique style profile.'}
              </motion.p>
          </div>
 
@@ -450,57 +454,48 @@ const Auth = ({ onComplete }) => {
                 isPassword={true}
                 value={formData.password} 
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
+                showPassword={showPassword}
+                setShowPassword={setShowPassword}
                 delay={0.3} 
             />
 
             {isLogin && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-end mb-8 -mt-4">
-                    <button type="button" className="text-[11px] font-bold text-[#1a1a1a] tracking-widest uppercase hover:text-[#5a00e0] transition-colors">Forgot Password?</button>
+                    <button type="button" className="text-[11px] font-bold text-[#1a1a1a] tracking-widest uppercase hover:text-[#5a00e0] transition-colors border-b border-transparent hover:border-[#5a00e0]">Forgot Password?</button>
                 </motion.div>
             )}
 
             {/* MAIN CTA BUTTON */}
-            <motion.div 
-                layout 
-                className="relative group mt-8"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-            >
-                {/* Green/Purple Shadow Glow */}
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-[#5a00e0] to-[#00ff9d] rounded-full opacity-30 blur-lg group-hover:opacity-60 transition duration-500"></div>
+            <motion.div layout className="relative group mt-10" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                {/* Purple Shadow Glow */}
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-[#5a00e0] to-[#7c3aed] rounded-full opacity-40 blur-lg group-hover:opacity-70 transition duration-500"></div>
                 
-                <button 
-                    className="relative w-full bg-[#000000] text-white h-16 rounded-full font-bold text-sm shadow-2xl flex items-center justify-center gap-4 overflow-hidden"
-                >
-                    <span className="relative z-10 tracking-[0.2em] uppercase flex items-center gap-2 text-[13px]">
+                <button className="relative w-full bg-[#0a0a0a] text-white h-16 rounded-full font-bold text-sm shadow-2xl flex items-center justify-center gap-4 overflow-hidden">
+                    <span className="relative z-10 tracking-[0.2em] uppercase flex items-center gap-2 text-[13px] font-bold">
                          {isLogin ? 'Log In' : 'Start Styling'} <ArrowRight size={18} />
                     </span>
-                    
                     {/* Shimmer Animation */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
                 </button>
             </motion.div>
          </form>
 
          {/* Footer & Socials */}
          <div className="mt-12 flex flex-col items-center gap-6">
-             
-             {/* Fixed Divider */}
              <div className="w-full flex items-center gap-4 opacity-60">
                  <div className="h-[1px] flex-1 bg-gray-200"></div>
                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest whitespace-nowrap">Or continue with</span>
                  <div className="h-[1px] flex-1 bg-gray-200"></div>
              </div>
 
-             {/* Google Button */}
-             <button className="w-full py-4 rounded-full border border-gray-200 bg-white flex items-center justify-center gap-3 text-sm font-bold text-[#1a1a1a] hover:bg-gray-50 transition-all duration-300 group">
+             <button className="w-full py-4 rounded-full border border-gray-200 bg-white flex items-center justify-center gap-3 text-sm font-bold text-[#1a1a1a] hover:bg-gray-50 hover:border-[#5a00e0] transition-all duration-300 group shadow-sm">
                 <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                 Google
              </button>
              
              <p className="text-xs text-gray-400 font-medium">
                  {isLogin ? "Don't have an account?" : "Already have an account?"}
-                 <button onClick={() => setIsLogin(!isLogin)} className="ml-2 text-[#1a1a1a] font-bold tracking-wide hover:text-[#5a00e0] transition-colors underline decoration-2 decoration-gray-200 underline-offset-4">
+                 <button onClick={() => setIsLogin(!isLogin)} className="ml-2 text-[#1a1a1a] font-bold tracking-wide hover:text-[#5a00e0] transition-colors underline decoration-2 decoration-[#5a00e0]/20 underline-offset-4">
                     {isLogin ? 'Sign Up' : 'Log In'}
                  </button>
              </p>
@@ -827,7 +822,7 @@ const UltraModernNavbar = ({ cartCount, onCheckout }) => {
             whileTap={{ scale: 0.95 }}
           >
             <h1 className="font-serif text-xl font-black text-white tracking-widest drop-shadow-md">
-              VOG
+            TryOn
             </h1>
           </motion.div>
 
