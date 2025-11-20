@@ -197,7 +197,7 @@ const Onboarding = ({ onNext }) => {
         className="w-full h-full flex flex-col relative z-10"
       >
         <div className="pt-14 pb-4 text-center">
-          <motion.h1 className="font-playfair text-3xl font-bold tracking-tight text-[#1a1a1a]">Aazmaao AI</motion.h1>
+          <motion.h1 className="font-playfair text-3xl font-bold tracking-tight text-[#5a00e0]">Aazmaao</motion.h1>
         </div>
 
         {/* 3D CAROUSEL */}
@@ -243,11 +243,15 @@ const Onboarding = ({ onNext }) => {
   className="flex flex-col items-center"
 >
       {/* HEADLINE */}
-     <h2 className="text-[28px] leading-[1.1] font-black text-center tracking-tight text-[#1a1a1a] mb-4 font-['Plus_Jakarta_Sans']">
-                  Welcome to Aazmaao <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5a00e0] to-[#8b2ce8]">
-            Where Fashion Meets AI
-          </span>
-              </h2>
+   <h2 className="text-[28px] leading-[1.1] font-black text-center tracking-tight text-[#1a1a1a] mb-4 font-['Plus_Jakarta_Sans']">
+  Welcome to 
+  <span className='text-[#4c00c7]'> Aazmaao </span> 
+  <br/>
+  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5a00e0] to-[#8b2ce8]">
+    Where Fashion Meets AI
+  </span>
+</h2>
+
 
       {/* SUBTITLE */}
       <p className="text-slate-500 text-center text-[15px] mb-8 px-4 leading-relaxed font-medium max-w-[380px] font-['Inter']">
