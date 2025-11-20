@@ -287,63 +287,67 @@ const Onboarding = ({ onNext }) => {
 // --- 2. UPDATED AUTH SCREEN (White Luxe + Purple/Green Gradient) ---
 // --- ULTRA-SMOOTH INPUT COMPONENT (Moved outside to fix focus bug) ---
 // --- ULTRA-SMOOTH INPUT COMPONENT (Preserved & Polished) ---
-  const LuxeInput = ({ label, type, value, onChange, icon: Icon, isPassword = false, delay, showPassword, setShowPassword }) => {
-    const [focused, setFocused] = useState(false);
-    const hasValue = value && value.length > 0;
-    
-    if (!Icon) return null;
+ const LuxeInput = ({ label, type, value, onChange, icon: Icon, isPassword = false, delay, showPassword, setShowPassword }) => {
+  const [focused, setFocused] = useState(false);
+  const hasValue = value && value.length > 0;
+  
+  if (!Icon) return null;
 
-    return (
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: delay, type: "spring", stiffness: 300, damping: 24 }}
-        className="relative mb-6 group"
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: delay, type: "spring", stiffness: 300, damping: 24 }}
+      className="relative mb-6 group"
+      // OPTIMIZATION: Prevents layout thrashing during typing
+      layout="position" 
+    >
+      {/* Icon */}
+      <div className={`absolute left-0 top-4 transition-colors duration-500 ${focused ? 'text-[#5a00e0]' : 'text-[#1a1a1a]/40'}`}>
+        <Icon size={22} strokeWidth={1.5} />
+      </div>
+
+      {/* Input Field - Added transform-gpu for mobile smoothness */}
+      <input 
+        type={isPassword ? (showPassword ? "text" : "password") : type}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        className="peer w-full border-b border-gray-200 bg-transparent py-4 pl-10 pr-10 text-[#1a1a1a] text-lg outline-none transition-all duration-300 placeholder-transparent font-medium tracking-tight transform-gpu"
+        placeholder={label} 
+        // OPTIMIZATION: distinct styling for auto-fill to prevent white background flicker
+        autoComplete="off"
+      />
+      
+      {/* Floating Label */}
+      <label 
+        className={`absolute left-10 pointer-events-none transition-all duration-300 ease-out origin-left font-inter
+        ${(focused || hasValue) 
+          ? "-top-2 text-[10px] font-bold text-[#5a00e0] tracking-[0.2em] uppercase" 
+          : "top-4 text-base text-gray-400 font-normal tracking-wide"}`}
       >
-        {/* Icon */}
-        <div className={`absolute left-0 top-4 transition-colors duration-500 ${focused ? 'text-[#5a00e0]' : 'text-[#1a1a1a]/40'}`}>
-          <Icon size={22} strokeWidth={1.5} />
-        </div>
+        {label}
+      </label>
 
-        {/* Input Field - Professional Font Settings */}
-        <input 
-          type={isPassword ? (showPassword ? "text" : "password") : type}
-          value={value}
-          onChange={onChange}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          className="peer w-full border-b border-gray-200 bg-transparent py-4 pl-10 pr-10 text-[#1a1a1a] text-lg outline-none transition-all duration-300 placeholder-transparent font-medium tracking-tight"
-          placeholder={label} 
-        />
-        
-        {/* Floating Label */}
-        <label 
-          className={`absolute left-10 pointer-events-none transition-all duration-300 ease-out origin-left font-inter
-          ${(focused || hasValue) 
-            ? "-top-2 text-[10px] font-bold text-[#5a00e0] tracking-[0.2em] uppercase" 
-            : "top-4 text-base text-gray-400 font-normal tracking-wide"}`}
-        >
-          {label}
-        </label>
+      {/* Password Toggle */}
+      {isPassword && (
+          <button 
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-0 top-4 text-gray-300 hover:text-[#5a00e0] transition-colors"
+          >
+              {showPassword ? <EyeOff size={20} strokeWidth={1.5} /> : <Eye size={20} strokeWidth={1.5} />}
+          </button>
+      )}
 
-        {/* Password Toggle */}
-        {isPassword && (
-            <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-0 top-4 text-gray-300 hover:text-[#5a00e0] transition-colors"
-            >
-                {showPassword ? <EyeOff size={20} strokeWidth={1.5} /> : <Eye size={20} strokeWidth={1.5} />}
-            </button>
-        )}
+      {/* Animated Bottom Border */}
+      <div className={`absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-[#5a00e0] to-[#8b5cf6] transition-transform duration-500 origin-left ${focused ? 'scale-x-100' : 'scale-x-0'}`}></div>
+    </motion.div>
+  );
+};
 
-        {/* Animated Bottom Border */}
-        <div className={`absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-[#5a00e0] to-[#8b5cf6] transition-transform duration-500 origin-left ${focused ? 'scale-x-100' : 'scale-x-0'}`}></div>
-      </motion.div>
-    );
-  };
-
-  const Auth = ({ onComplete }) => {
+ const Auth = ({ onComplete }) => {
     const [isLogin, setIsLogin] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
@@ -357,19 +361,24 @@ const Onboarding = ({ onNext }) => {
     return (
       <div className="w-full h-full bg-white relative overflow-hidden flex flex-col items-center justify-center font-inter">
         
-        {/* --- 1. LUXE ATMOSPHERE --- */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* --- 1. LUXE ATMOSPHERE (OPTIMIZED FOR MOBILE) --- */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden transform-gpu">
+          {/* Blob 1: Added willChange and transform-gpu */}
           <motion.div 
               animate={{ x: [0, 50, 0], y: [0, -50, 0], scale: [1, 1.2, 1] }}
               transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-[10%] -left-[10%] w-[500px] h-[500px] bg-[#5a00e0]/10 rounded-full blur-[100px]" 
+              style={{ willChange: "transform" }} 
+              className="absolute -top-[10%] -left-[10%] w-[500px] h-[500px] bg-[#5a00e0]/10 rounded-full blur-[100px] transform-gpu backface-hidden" 
           />
+          {/* Blob 2: Added willChange and transform-gpu */}
           <motion.div 
               animate={{ x: [0, -30, 0], y: [0, 60, 0], scale: [1, 1.3, 1] }}
               transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-[30%] -right-[20%] w-[400px] h-[400px] bg-[#00ff9d]/15 rounded-full blur-[90px]" 
+              style={{ willChange: "transform" }}
+              className="absolute top-[30%] -right-[20%] w-[400px] h-[400px] bg-[#00ff9d]/15 rounded-full blur-[90px] transform-gpu backface-hidden" 
           />
-          <div className="absolute inset-0 opacity-[0.4] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-soft-light"></div>
+          {/* Noise Layer: Added isolation to prevent blend-mode lag */}
+          <div className="absolute inset-0 opacity-[0.4] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-soft-light isolate"></div>
         </div>
 
         {/* --- 2. CONTENT CONTAINER --- */}
