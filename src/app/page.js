@@ -505,7 +505,7 @@ const Auth = ({ onComplete }) => {
 const AIStylistQuiz = ({ userName, onComplete }) => {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [direction, setDirection] = useState(1); // For slide direction
+  const [direction, setDirection] = useState(1);
 
   const steps = [
     {
@@ -534,25 +534,25 @@ const AIStylistQuiz = ({ userName, onComplete }) => {
     setDirection(1);
     
     if (step < steps.length - 1) {
-      setTimeout(() => setStep(step + 1), 250); // Slight delay for exit animation
+      setTimeout(() => setStep(step + 1), 250); 
     } else {
       onComplete({...answers, [currentKey]: option});
     }
   };
 
-  // Animation Variants
+  // Optimized Animation Variants (Reduced stiffness for mobile smoothness)
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.3 }
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
     },
-    exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
+    exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 50, damping: 15 } }
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 50, damping: 20 } }
   };
 
   const currentStepData = steps[step];
@@ -561,22 +561,19 @@ const AIStylistQuiz = ({ userName, onComplete }) => {
   return (
     <div className="w-full h-full relative bg-[#121212] overflow-hidden font-inter">
       
-      {/* --- 1. CINEMATIC BACKGROUND --- */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.img 
-            key={step} // Subtle re-trigger on step change
-            initial={{ scale: 1.1 }}
-            animate={{ scale: 1.0 }}
-            transition={{ duration: 10, ease: "linear" }}
+      {/* --- 1. OPTIMIZED CINEMATIC BACKGROUND --- */}
+      {/* Removed Framer Motion from Image. Used CSS transform-gpu for lag-free rendering */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <img 
             src={IMAGES.stylistBg} 
             alt="Background" 
-            className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale-[30%]" 
+            className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale-[30%] scale-105 transform-gpu" 
         />
-        {/* Heavy Gradient Vignette for Focus */}
+        {/* Heavy Gradient Vignette for Focus (Static) */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#121212]"></div>
         
-        {/* Floating "Dust" Particles */}
-        <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+        {/* Static Noise Texture instead of mix-blend animation */}
+        <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
       </div>
 
       {/* --- 2. HEADER & PROGRESS --- */}
@@ -584,12 +581,13 @@ const AIStylistQuiz = ({ userName, onComplete }) => {
         <div className="flex justify-between items-center text-white/80 mb-6">
             <button className="p-2 rounded-full hover:bg-white/10 transition-colors"><ChevronLeft size={20} /></button>
             <span className="text-[10px] font-bold tracking-[0.25em] uppercase">Siena AI</span>
-            <div className="w-9"></div> {/* Spacer */}
+            <div className="w-9"></div>
         </div>
         
-        {/* Luxe Progress Line */}
+        {/* Luxe Progress Line - Optimized layout animation */}
         <div className="w-full h-[2px] bg-white/10 rounded-full overflow-hidden">
             <motion.div 
+                layout
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.8, ease: "circOut" }}
@@ -629,14 +627,15 @@ const AIStylistQuiz = ({ userName, onComplete }) => {
                     {currentStepData.options.map((opt, idx) => (
                         <motion.button 
                             key={`${step}-${idx}`}
-                            whileHover={{ scale: 1.03, backgroundColor: "rgba(90, 0, 224, 0.25)", borderColor: "rgba(90, 0, 224, 0.6)" }}
-                            whileTap={{ scale: 0.95 }}
+                            // Reduced scale factor to prevent pixel-snapping jitter on mobile
+                            whileHover={{ scale: 1.02, backgroundColor: "rgba(90, 0, 224, 0.25)", borderColor: "rgba(90, 0, 224, 0.6)" }}
+                            whileTap={{ scale: 0.98 }}
                             onClick={() => handleOptionClick(opt)}
-                            className="relative group backdrop-blur-xl bg-white/5 border border-white/10 text-white py-6 px-2 rounded-[24px] font-medium text-xs md:text-sm tracking-wider uppercase transition-all duration-300 overflow-hidden"
+                            className="relative group backdrop-blur-xl bg-white/5 border border-white/10 text-white py-6 px-2 rounded-[24px] font-medium text-xs md:text-sm tracking-wider uppercase transition-colors duration-300 overflow-hidden"
                         >
                             <span className="relative z-10">{opt}</span>
-                            {/* Hover Gradient Glint */}
-                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            {/* Replaced complex gradient animation with CSS hover for performance */}
+                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         </motion.button>
                     ))}
                 </motion.div>
@@ -644,20 +643,21 @@ const AIStylistQuiz = ({ userName, onComplete }) => {
             </motion.div>
         </AnimatePresence>
 
-        {/* --- 4. THE "SIENA" DIGITAL SOUL (Mic Replacement) --- */}
+        {/* --- 4. THE "SIENA" DIGITAL SOUL (Performance Optimized) --- */}
         <div className="w-full flex justify-center relative">
             {/* Pulsating Core */}
             <div className="relative w-20 h-20 flex items-center justify-center">
-                 {/* Outer Ripples */}
+                 {/* Outer Ripples - REPLACED BLUR WITH RADIAL GRADIENT (FAST) */}
                  <motion.div 
                     animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }} 
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute inset-0 bg-[#5a00e0]/20 rounded-full blur-md"
+                    className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(90,0,224,0.4)_0%,transparent_70%)]"
                  />
+                 {/* Inner Ripples - REPLACED BLUR WITH RADIAL GRADIENT (FAST) */}
                  <motion.div 
                     animate={{ scale: [1, 1.2, 1], opacity: [0.8, 0.2, 0.8] }} 
                     transition={{ duration: 2, repeat: Infinity, delay: 0.5, ease: "easeInOut" }}
-                    className="absolute inset-2 bg-[#714cfe]/30 rounded-full blur-sm"
+                    className="absolute inset-2 rounded-full bg-[radial-gradient(circle,rgba(113,76,254,0.5)_0%,transparent_70%)]"
                  />
                  
                  {/* The Button */}
