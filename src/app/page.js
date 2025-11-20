@@ -287,7 +287,7 @@ const Onboarding = ({ onNext }) => {
 // --- 2. UPDATED AUTH SCREEN (White Luxe + Purple/Green Gradient) ---
 // --- ULTRA-SMOOTH INPUT COMPONENT (Moved outside to fix focus bug) ---
 // --- ULTRA-SMOOTH INPUT COMPONENT (Preserved & Polished) ---
- const LuxeInput = ({ label, type, value, onChange, icon: Icon, isPassword = false, delay, showPassword, setShowPassword }) => {
+const LuxeInput = ({ label, type, value, onChange, icon: Icon, isPassword = false, delay, showPassword, setShowPassword }) => {
   const [focused, setFocused] = useState(false);
   const hasValue = value && value.length > 0;
   
@@ -299,28 +299,26 @@ const Onboarding = ({ onNext }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: delay, type: "spring", stiffness: 300, damping: 24 }}
       className="relative mb-6 group"
-      // OPTIMIZATION: Prevents layout thrashing during typing
-      layout="position" 
     >
-      {/* Icon */}
-      <div className={`absolute left-0 top-4 transition-colors duration-500 ${focused ? 'text-[#5a00e0]' : 'text-[#1a1a1a]/40'}`}>
+      {/* Icon - Static positioning for performance */}
+      <div className={`absolute left-0 top-4 transition-colors duration-300 ${focused ? 'text-[#5a00e0]' : 'text-[#1a1a1a]/40'}`}>
         <Icon size={22} strokeWidth={1.5} />
       </div>
 
-      {/* Input Field - Added transform-gpu for mobile smoothness */}
+      {/* Input Field - Standard CSS transitions only */}
       <input 
         type={isPassword ? (showPassword ? "text" : "password") : type}
         value={value}
         onChange={onChange}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        className="peer w-full border-b border-gray-200 bg-transparent py-4 pl-10 pr-10 text-[#1a1a1a] text-lg outline-none transition-all duration-300 placeholder-transparent font-medium tracking-tight transform-gpu"
+        className="peer w-full border-b border-gray-200 bg-transparent py-4 pl-10 pr-10 text-[#1a1a1a] text-lg outline-none transition-colors duration-300 placeholder-transparent font-medium tracking-tight"
         placeholder={label} 
-        // OPTIMIZATION: distinct styling for auto-fill to prevent white background flicker
         autoComplete="off"
+        style={{ WebkitTapHighlightColor: 'transparent' }} // Mobile specific optimization
       />
       
-      {/* Floating Label */}
+      {/* Floating Label - Uses translate instead of layout reflows */}
       <label 
         className={`absolute left-10 pointer-events-none transition-all duration-300 ease-out origin-left font-inter
         ${(focused || hasValue) 
@@ -335,19 +333,19 @@ const Onboarding = ({ onNext }) => {
           <button 
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-0 top-4 text-gray-300 hover:text-[#5a00e0] transition-colors"
+              className="absolute right-0 top-4 text-gray-300 hover:text-[#5a00e0] transition-colors p-1"
           >
               {showPassword ? <EyeOff size={20} strokeWidth={1.5} /> : <Eye size={20} strokeWidth={1.5} />}
           </button>
       )}
 
-      {/* Animated Bottom Border */}
+      {/* Animated Bottom Border - GPU Accelerated Scale */}
       <div className={`absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-[#5a00e0] to-[#8b5cf6] transition-transform duration-500 origin-left ${focused ? 'scale-x-100' : 'scale-x-0'}`}></div>
     </motion.div>
   );
 };
 
- const Auth = ({ onComplete }) => {
+const Auth = ({ onComplete }) => {
     const [isLogin, setIsLogin] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
@@ -359,33 +357,23 @@ const Onboarding = ({ onNext }) => {
     };
 
     return (
-      <div className="w-full h-full bg-white relative overflow-hidden flex flex-col items-center justify-center font-inter">
+      <div className="w-full h-full relative overflow-hidden flex flex-col items-center justify-center font-inter bg-white">
         
-        {/* --- 1. LUXE ATMOSPHERE (OPTIMIZED FOR MOBILE) --- */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden transform-gpu">
-          {/* Blob 1: Added willChange and transform-gpu */}
-          <motion.div 
-              animate={{ x: [0, 50, 0], y: [0, -50, 0], scale: [1, 1.2, 1] }}
-              transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-              style={{ willChange: "transform" }} 
-              className="absolute -top-[10%] -left-[10%] w-[500px] h-[500px] bg-[#5a00e0]/10 rounded-full blur-[100px] transform-gpu backface-hidden" 
-          />
-          {/* Blob 2: Added willChange and transform-gpu */}
-          <motion.div 
-              animate={{ x: [0, -30, 0], y: [0, 60, 0], scale: [1, 1.3, 1] }}
-              transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-              style={{ willChange: "transform" }}
-              className="absolute top-[30%] -right-[20%] w-[400px] h-[400px] bg-[#00ff9d]/15 rounded-full blur-[90px] transform-gpu backface-hidden" 
-          />
-          {/* Noise Layer: Added isolation to prevent blend-mode lag */}
-          <div className="absolute inset-0 opacity-[0.4] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-soft-light isolate"></div>
+        {/* --- 1. ULTRA-PERFORMANCE BACKGROUND (No Blur Filters) --- */}
+        {/* We use direct CSS gradients which are hardware accelerated by default */}
+        <div className="absolute inset-0 z-0">
+           {/* Primary Gradient Mesh - Static & Fast */}
+           <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,_rgba(90,0,224,0.15)_0%,_transparent_50%),_radial-gradient(circle_at_100%_100%,_rgba(0,255,157,0.15)_0%,_transparent_50%)]"></div>
+           
+           {/* Subtle Grain Texture for "Editorial" Feel - Static Image */}
+           <div className="absolute inset-0 opacity-[0.4] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-soft-light"></div>
         </div>
 
         {/* --- 2. CONTENT CONTAINER --- */}
         <motion.div layout className="relative z-10 w-full max-w-[360px] px-6">
           
           {/* Typography Header */}
-          <div className="mb-12 relative">
+          <div className="mb-10 relative">
               <motion.h1 
                   layout
                   className="font-playfair text-[3.5rem] leading-[0.95] text-[#1a1a1a] mb-3 relative z-10"
@@ -429,7 +417,7 @@ const Onboarding = ({ onNext }) => {
           </div>
 
           {/* Form Area */}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="relative z-20">
               <AnimatePresence mode="popLayout">
                   {!isLogin && (
                       <LuxeInput 
@@ -475,21 +463,21 @@ const Onboarding = ({ onNext }) => {
 
               {/* MAIN CTA BUTTON */}
               <motion.div layout className="relative group mt-10" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  {/* Purple Shadow Glow */}
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-[#5a00e0] to-[#7c3aed] rounded-full opacity-40 blur-lg group-hover:opacity-70 transition duration-500"></div>
+                  {/* Static shadow instead of animated glow for performance */}
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-[#5a00e0] to-[#7c3aed] rounded-full opacity-30 blur-sm group-hover:opacity-60 transition duration-500"></div>
                   
                   <button className="relative w-full bg-[#0a0a0a] text-white h-16 rounded-full font-bold text-sm shadow-2xl flex items-center justify-center gap-4 overflow-hidden">
                       <span className="relative z-10 tracking-[0.2em] uppercase flex items-center gap-2 text-[13px] font-bold">
                           {isLogin ? 'Log In' : 'Start Styling'} <ArrowRight size={18} />
                       </span>
-                      {/* Shimmer Animation */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+                      {/* Lightweight CSS Hover Effect */}
+                      <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500 ease-out"></div>
                   </button>
               </motion.div>
           </form>
 
           {/* Footer & Socials */}
-          <div className="mt-12 flex flex-col items-center gap-6">
+          <div className="mt-10 flex flex-col items-center gap-6 relative z-20">
               <div className="w-full flex items-center gap-4 opacity-60">
                   <div className="h-[1px] flex-1 bg-gray-200"></div>
                   <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest whitespace-nowrap">Or continue with</span>
