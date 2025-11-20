@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 // Find this line at the top and update it:
 import { ArrowRight, Camera, Mic, Bell, Heart, Check, ShoppingBag, Square, Search, ChevronLeft, Share2, X, Mail, Lock, Eye, EyeOff, User as UserIcon } from 'lucide-react';
-import { motion, AnimatePresence } from "framer-motion"; 
+import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 
 
 
@@ -1008,11 +1008,28 @@ const HomeFeed = ({ onTryOn, addToCart, cartCount, onCheckout }) => {
 // --- 6. UPDATED TRY ON SCREEN (Ethereal Glass & Liquid Physics) ---
 // --- 6. THE ULTIMATE TRY-ON SCREEN (Liquid Physics & Editorial UI) ---
 // --- 6. THE ULTIMATE TRY-ON SCREEN (Prismatic Load + White Glass Dock) ---
+// --- 6. THE ULTIMATE TRY-ON SCREEN (Prismatic Load + Slide-to-Bag) ---
 const TryOnScreen = ({ outfit, onClose, addToCart }) => {
   const [loading, setLoading] = useState(true);
+  const [slideComplete, setSlideComplete] = useState(false);
+
+  // Slider Physics
+  const x = useMotionValue(0);
+  const xInput = [0, 200]; // Drag range
+  const opacity = useTransform(x, xInput, [1, 0]); // Text fades out
+  const arrowOpacity = useTransform(x, [0, 50], [1, 0]); // Arrows fade out quickly
+  
+  // Handle Drag End
+  const handleDragEnd = () => {
+    if (x.get() > 150) { // Threshold to trigger
+        setSlideComplete(true);
+        setTimeout(() => addToCart(outfit), 800);
+    } else {
+        // It snaps back automatically via dragConstraints
+    }
+  };
 
   useEffect(() => {
-    // Simulate the AI "Weaving/Fitting" process
     const timer = setTimeout(() => setLoading(false), 3500);
     return () => clearTimeout(timer);
   }, []);
@@ -1020,173 +1037,84 @@ const TryOnScreen = ({ outfit, onClose, addToCart }) => {
   return (
     <div className="fixed inset-0 z-[60] flex flex-col justify-end h-[100dvh]">
       
-      {/* 1. CINEMATIC BACKDROP */}
+      {/* 1. BACKDROP */}
       <motion.div 
-        initial={{ opacity: 0 }} 
-        animate={{ opacity: 1 }} 
-        exit={{ opacity: 0 }}
-        onClick={onClose}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
         className="absolute inset-0 bg-[#0a0a0a]/30 backdrop-blur-md transition-all duration-500"
       />
 
-      {/* 2. THE DRAGGABLE SHEET */}
+      {/* 2. DRAGGABLE SHEET */}
       <motion.div 
-        initial={{ y: "100%" }} 
-        animate={{ y: 0 }} 
-        exit={{ y: "100%" }}
+        initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
-        drag="y"
-        dragConstraints={{ top: 0 }}
-        dragElastic={0.2}
-        onDragEnd={(e, { offset, velocity }) => {
-            if (offset.y > 100 || velocity.y > 500) onClose();
-        }}
+        drag="y" dragConstraints={{ top: 0 }} dragElastic={0.2}
+        onDragEnd={(e, { offset, velocity }) => { if (offset.y > 100 || velocity.y > 500) onClose(); }}
         className="relative w-full h-[92%] bg-white rounded-t-[32px] shadow-[0_-50px_100px_-20px_rgba(0,0,0,0.2)] flex flex-col overflow-hidden"
       >
         
-        {/* --- DRAG HANDLE & HEADER --- */}
+        {/* HEADER & HANDLE */}
         <div className="absolute top-0 left-0 w-full z-50 pt-4 pb-6 flex justify-center bg-gradient-to-b from-white via-white/90 to-transparent pointer-events-none">
            <div className="w-16 h-1.5 bg-[#e5e5e5] rounded-full" />
         </div>
-        
-        {/* Close Button */}
-        <button 
-            onClick={(e) => { e.stopPropagation(); onClose(); }} 
-            className="absolute top-6 right-6 z-50 p-3 bg-white/80 backdrop-blur-xl rounded-full shadow-sm border border-gray-100 text-[#1a1a1a] active:scale-90 transition-transform hover:bg-gray-50"
-        >
+        <button onClick={(e) => { e.stopPropagation(); onClose(); }} className="absolute top-6 right-6 z-50 p-3 bg-white/80 backdrop-blur-xl rounded-full shadow-sm border border-gray-100 text-[#1a1a1a] active:scale-90 transition-transform hover:bg-gray-50">
             <X size={20} strokeWidth={2} />
         </button>
 
-        {/* --- 3. MAIN DISPLAY AREA --- */}
+        {/* 3. MAIN CONTENT AREA */}
         <div className="flex-1 relative w-full h-full overflow-hidden bg-white">
-            
             <AnimatePresence mode="wait">
-                
-                {/* A. LOADING STATE (Light & Prismatic) */}
+                {/* LOADING STATE */}
                 {loading ? (
-                    <motion.div 
-                        key="loader"
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-white"
-                    >
-                        {/* The Prismatic Lens Loader */}
+                    <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-white">
                         <div className="relative w-48 h-48 flex items-center justify-center mb-8">
-                            {/* Breathing Aura */}
-                            <motion.div 
-                                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                                className="absolute inset-0 bg-[#5a00e0]/10 rounded-full blur-2xl"
-                            />
-                            
-                            {/* Spinning Rings */}
+                            <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} className="absolute inset-0 bg-[#5a00e0]/10 rounded-full blur-2xl" />
                             <div className="relative w-32 h-32">
-                                <motion.div 
-                                    animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                                    className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#5a00e0] border-l-[#00ff9d]"
-                                />
-                                <motion.div 
-                                    animate={{ rotate: -360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                                    className="absolute inset-4 rounded-full border-[2px] border-gray-100 border-b-gray-300"
-                                />
-                                
-                                {/* Central Icon */}
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <Camera className="text-[#1a1a1a] w-8 h-8 animate-pulse" />
-                                </div>
+                                <motion.div animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#5a00e0] border-l-[#00ff9d]" />
+                                <motion.div animate={{ rotate: -360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} className="absolute inset-4 rounded-full border-[2px] border-gray-100 border-b-gray-300" />
+                                <div className="absolute inset-0 flex items-center justify-center"><Camera className="text-[#1a1a1a] w-8 h-8 animate-pulse" /></div>
                             </div>
                         </div>
-
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-center">
                             <h2 className="font-playfair text-2xl font-black text-[#1a1a1a] tracking-tight">Generating Fit</h2>
                             <div className="h-1 w-24 bg-gray-100 rounded-full mx-auto mt-3 overflow-hidden">
-                                <motion.div 
-                                    animate={{ x: ["-100%", "100%"] }} 
-                                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                                    className="h-full w-full bg-gradient-to-r from-[#5a00e0] to-[#00ff9d]"
-                                />
+                                <motion.div animate={{ x: ["-100%", "100%"] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} className="h-full w-full bg-gradient-to-r from-[#5a00e0] to-[#00ff9d]" />
                             </div>
-                            <p className="text-[10px] font-bold text-gray-400 mt-2 tracking-[0.3em] uppercase">
-                                AI Stitching in progress...
-                            </p>
+                            <p className="text-[10px] font-bold text-gray-400 mt-2 tracking-[0.3em] uppercase">AI Stitching in progress...</p>
                         </motion.div>
                     </motion.div>
-
                 ) : (
-
-                /* B. CONTENT STATE (Image & Details) */
-                    <motion.div 
-                        key="content"
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                        className="w-full h-full overflow-y-auto pb-32 pt-16 px-0 no-scrollbar"
-                    >
-                        {/* Image Card */}
+                    /* CONTENT STATE */
+                    <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full h-full overflow-y-auto pb-32 pt-16 px-0 no-scrollbar">
                         <div className="px-4">
                             <div className="relative w-full aspect-[3/4] rounded-[32px] overflow-hidden shadow-lg border border-gray-100">
                                 <img src={IMAGES.tryOnModel} className="w-full h-full object-cover" alt="Model" />
-                                <motion.img 
-                                    initial={{ opacity: 0 }} animate={{ opacity: 0.9 }} 
-                                    transition={{ duration: 1 }} 
-                                    src={IMAGES.tryOnClothes} 
-                                    className="absolute inset-0 w-full h-full object-contain mix-blend-multiply" 
-                                    alt="Clothes" 
-                                />
-                                
-                                {/* Holographic Pins */}
-                                <motion.div 
-                                    initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: "spring" }}
-                                    className="absolute top-[30%] left-[55%]"
-                                >
+                                <motion.img initial={{ opacity: 0 }} animate={{ opacity: 0.9 }} transition={{ duration: 1 }} src={IMAGES.tryOnClothes} className="absolute inset-0 w-full h-full object-contain mix-blend-multiply" alt="Clothes" />
+                                {/* Pins */}
+                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: "spring" }} className="absolute top-[30%] left-[55%]">
                                     <div className="absolute -inset-2 bg-white/40 rounded-full animate-ping" />
                                     <div className="w-4 h-4 bg-white border-[3px] border-[#5a00e0] rounded-full shadow-lg" />
-                                    <div className="absolute left-6 -top-2 bg-white/90 backdrop-blur-xl border border-white/50 px-3 py-1.5 rounded-[12px] shadow-xl">
-                                        <p className="text-[8px] font-bold text-gray-400 uppercase">Top</p>
-                                        <p className="text-xs font-black text-[#1a1a1a]">$120</p>
-                                    </div>
+                                    <div className="absolute left-6 -top-2 bg-white/90 backdrop-blur-xl border border-white/50 px-3 py-1.5 rounded-[12px] shadow-xl"><p className="text-[8px] font-bold text-gray-400 uppercase">Top</p><p className="text-xs font-black text-[#1a1a1a]">$120</p></div>
                                 </motion.div>
-
-                                <motion.div 
-                                    initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.7, type: "spring" }}
-                                    className="absolute top-[65%] left-[35%]"
-                                >
+                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.7, type: "spring" }} className="absolute top-[65%] left-[35%]">
                                      <div className="w-4 h-4 bg-white border-[3px] border-[#5a00e0] rounded-full shadow-lg" />
-                                     <div className="absolute left-6 -top-2 bg-white/90 backdrop-blur-xl border border-white/50 px-3 py-1.5 rounded-[12px] shadow-xl">
-                                        <p className="text-[8px] font-bold text-gray-400 uppercase">Pants</p>
-                                        <p className="text-xs font-black text-[#1a1a1a]">$129</p>
-                                     </div>
+                                     <div className="absolute left-6 -top-2 bg-white/90 backdrop-blur-xl border border-white/50 px-3 py-1.5 rounded-[12px] shadow-xl"><p className="text-[8px] font-bold text-gray-400 uppercase">Pants</p><p className="text-xs font-black text-[#1a1a1a]">$129</p></div>
                                 </motion.div>
                             </div>
                         </div>
-
-                        {/* Product Info */}
                         <div className="px-8 mt-8 text-center">
-                            <motion.h2 
-                                initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
-                                className="font-playfair text-[2.5rem] leading-[1] font-black text-[#1a1a1a] tracking-tight mb-4"
-                            >
-                                {outfit.outfit}
-                            </motion.h2>
-                            
-                            <motion.div 
-                                initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
-                                className="flex flex-wrap justify-center gap-2 mb-6"
-                            >
+                            <motion.h2 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="font-playfair text-[2.5rem] leading-[1] font-black text-[#1a1a1a] tracking-tight mb-4">{outfit.outfit}</motion.h2>
+                            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="flex flex-wrap justify-center gap-2 mb-6">
                                 <span className="px-4 py-1.5 rounded-full bg-[#f9fafc] border border-gray-200 text-[10px] font-bold text-[#1a1a1a] uppercase tracking-wider">98% Match</span>
                                 <span className="px-4 py-1.5 rounded-full bg-[#5a00e0]/5 border border-[#5a00e0]/20 text-[10px] font-bold text-[#5a00e0] uppercase tracking-wider">Trending</span>
                             </motion.div>
-                            
-                            <motion.p 
-                                initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}
-                                className="text-sm text-gray-500 font-medium leading-relaxed max-w-xs mx-auto"
-                            >
-                                Based on your profile, this fit perfectly balances comfort with the "Urban Casual" aesthetic you prefer.
-                            </motion.p>
+                            <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="text-sm text-gray-500 font-medium leading-relaxed max-w-xs mx-auto">Based on your profile, this fit perfectly balances comfort with the "Urban Casual" aesthetic you prefer.</motion.p>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
         </div>
 
-        {/* --- 4. FLOATING WHITE GLASS DOCK (Sticky Footer) --- */}
+        {/* --- 4. FLOATING DOCK with SLIDER BUTTON --- */}
         <div className="absolute bottom-0 left-0 w-full p-6 z-50">
              <motion.div 
                 initial={{ y: 100 }} animate={{ y: 0 }} transition={{ delay: 0.5, type: "spring" }}
@@ -1202,16 +1130,42 @@ const TryOnScreen = ({ outfit, onClose, addToCart }) => {
                     </button>
                  </div>
 
-                 {/* Main CTA Button */}
-                 <motion.button 
-                   whileTap={{ scale: 0.97 }}
-                   onClick={() => addToCart(outfit)}
-                   className="flex-1 ml-3 h-12 bg-[#5a00e0] text-white rounded-[20px] font-bold text-[11px] uppercase tracking-[0.15em] flex items-center justify-center gap-3 shadow-lg shadow-[#5a00e0]/25 hover:bg-[#4b00bd] transition-colors"
-                 >
-                    Add to Bag
-                    <div className="h-4 w-[1px] bg-white/20"></div>
-                    <span>${outfit.price}</span>
-                 </motion.button>
+                 {/* SLIDE TO ADD BUTTON (Restored Dimensions, New Functionality) */}
+                 <div className="flex-1 ml-2 h-12 relative bg-[#5a00e0] rounded-[20px] overflow-hidden shadow-lg shadow-[#5a00e0]/30">
+                    
+                    {/* Success Overlay */}
+                    {slideComplete && (
+                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-[#00ff9d] z-30 flex items-center justify-center gap-2">
+                             <span className="text-black font-bold text-xs uppercase tracking-widest">Added!</span>
+                             <Check size={16} className="text-black" strokeWidth={3}/>
+                         </motion.div>
+                    )}
+
+                    {/* Background Shimmer */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer pointer-events-none" />
+
+                    {/* Track Text & Arrows */}
+                    <motion.div style={{ opacity }} className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none pl-8">
+                         <div className="flex items-center gap-1">
+                            <span className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">Add to Bag</span>
+                            <motion.div style={{ opacity: arrowOpacity }} animate={{ x: [0, 5, 0] }} transition={{ repeat: Infinity, duration: 1.2 }} className="text-white/50"><ArrowRight size={10}/></motion.div>
+                            <motion.div style={{ opacity: arrowOpacity }} animate={{ x: [0, 5, 0] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.1 }} className="text-white/30"><ArrowRight size={10}/></motion.div>
+                         </div>
+                    </motion.div>
+
+                    {/* Draggable Handle (White Puck) */}
+                    <motion.div
+                        style={{ x }}
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 170 }} // Constrained to container width
+                        dragElastic={0.1}
+                        dragMomentum={false}
+                        onDragEnd={handleDragEnd}
+                        className="absolute left-1 top-1 bottom-1 w-10 bg-white rounded-[16px] flex items-center justify-center shadow-md cursor-grab active:cursor-grabbing z-20"
+                    >
+                        <ShoppingBag size={16} className="text-[#5a00e0]" />
+                    </motion.div>
+                 </div>
              </motion.div>
         </div>
 
