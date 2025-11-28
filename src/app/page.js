@@ -502,89 +502,187 @@ const Auth = ({ onComplete }) => {
   };
 // --- 3. AI STYLIST / PREFERENCE QUIZ ---
 // --- 3. UPDATED AI STYLIST QUIZ (Cinematic Editorial) ---
-const AIStylistQuiz = ({ userName, onComplete }) => {
+
+
+const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [inputValue, setInputValue] = useState(""); 
   const [direction, setDirection] = useState(1);
+  const [showResult, setShowResult] = useState(false); // To show the "Rustic Casual" screen
 
+  // --- FULL DATA FROM ALL SCREENSHOTS ---
   const steps = [
     {
       question: `Hi ${userName}, I'm Siena.`,
-      subtext: "Let's curate your look. What is the occasion?",
-      options: ["Everyday Style", "Work & Meetings", "Night Out", "Special Event"],
-      key: 'occasion'
+      subtext: "Let's curate your look. What are you looking for today?",
+      options: ["Casual", "Workwear", "Social Occasions", "Active / Sport"], 
+      key: 'category',
+      type: 'selection'
+    },
+    {
+        question: "What do you do for work?",
+        subtext: "I'll curate looks that fit your industry.",
+        // Long list from screenshot - handled by scrollable view
+        options: [
+            "Architecture", "Art / Design", "Building / Maintenance", "Business", 
+            "Community / Social Service", "Education", "Entertainer", 
+            "Farming / Fishing", "Financial Services", "Health Practitioner", 
+            "Hospitality", "Management", "Media / Communications", "Tech / IT"
+        ],
+        key: 'work_industry',
+        type: 'scrollable_selection' 
+    },
+    {
+        question: "Where do you like to shop?",
+        subtext: "This helps me understand your brand preferences.",
+        options: [
+            "Zara", "H&M", "Nordstrom", "Banana Republic", "Madewell", 
+            "Anthropologie", "Lululemon", "J.Crew", "Gap", "Old Navy", 
+            "Target", "Amazon", "Macy's", "Shopbop", "Saks Fifth Avenue"
+        ],
+        key: 'brands',
+        type: 'scrollable_selection'
+    },
+    {
+        question: "What is your body shape?",
+        subtext: "This helps me understand your proportions.",
+        options: [
+            { label: "Hourglass", desc: "Waist is narrowest part" },
+            { label: "Triangle", desc: "Hips broader than shoulders" },
+            { label: "Rectangle", desc: "Hips, shoulders, waist equal" },
+            { label: "Oval", desc: "Hips/shoulders narrower than waist" },
+            { label: "Heart", desc: "Hips narrower than shoulders" }
+        ],
+        key: 'body_shape',
+        type: 'complex_selection' 
+    },
+    {
+        question: "What denim styles do you like?",
+        subtext: "Select your go-to fits.",
+        options: ["Skinny", "Straight", "Bootcut", "Wide-leg", "High-rise", "Mid-rise", "Low-rise"],
+        key: 'denim_style',
+        type: 'selection'
+    },
+    {
+        question: "Which colors do you want to avoid?",
+        subtext: "I will exclude these from your selection.",
+        options: [
+            { label: "Reds", color: "#ef4444" },
+            { label: "Pinks", color: "#ec4899" },
+            { label: "Oranges", color: "#f97316" },
+            { label: "Yellows", color: "#eab308" },
+            { label: "Greens", color: "#22c55e" },
+            { label: "Blues", color: "#3b82f6" },
+            { label: "Purples", color: "#a855f7" },
+            { label: "Browns", color: "#78350f" },
+            { label: "Beiges", color: "#d6d3d1" },
+            { label: "Grays", color: "#6b7280" },
+            { label: "Whites", color: "#ffffff" },
+            { label: "Blacks", color: "#000000" }
+        ],
+        key: 'avoid_colors',
+        type: 'color_selection'
+    },
+    {
+        question: "Do you want to avoid any of these?",
+        subtext: "Select items you never wear.",
+        options: ["Dresses", "Jackets", "Skirts", "Pants", "Shorts", "Jeans", "Shoes", "Bags", "Blazers", "Jewelry"],
+        key: 'avoid_items',
+        type: 'selection' // Using selection for simplicity, can act as multi-select in future
+    },
+    {
+        question: "How do sleeves tend to fit?",
+        subtext: "Help me nail the shirt fit.",
+        options: ["Too Short", "Just Right", "Too Long"],
+        key: 'fit_sleeves',
+        type: 'selection'
+    },
+    {
+        question: "How tall are you?",
+        subtext: "Please enter your height (e.g., 5'10\").",
+        key: 'height',
+        type: 'input',
+        placeholder: "5' 10\""
+    },
+    {
+        question: "What is your weight?",
+        subtext: "Used strictly for size calculation (lbs/kg).",
+        key: 'weight',
+        type: 'input',
+        placeholder: "165 lbs"
     },
     {
       question: "What is your budget?",
       subtext: "I will find the best pieces within your range.",
       options: ["Under $100", "$100 - $300", "$300 - $800", "Luxury / No Limit"],
-      key: 'budget'
-    },
-    {
-      question: "And your usual size?",
-      subtext: "We'll confirm this with a 3D scan in a moment.",
-      options: ["XS / S", "M / L", "XL", "Plus Size"],
-      key: 'size'
+      key: 'budget',
+      type: 'selection'
     }
   ];
 
   const handleOptionClick = (option) => {
+    const value = typeof option === 'object' ? option.label : option;
     const currentKey = steps[step].key;
-    setAnswers(prev => ({...prev, [currentKey]: option}));
+    saveAndNext(currentKey, value);
+  };
+
+  const handleInputNext = () => {
+    if (!inputValue.trim()) return;
+    const currentKey = steps[step].key;
+    saveAndNext(currentKey, inputValue);
+    setInputValue("");
+  };
+
+  const saveAndNext = (key, value) => {
+    setAnswers(prev => ({...prev, [key]: value}));
     setDirection(1);
     
     if (step < steps.length - 1) {
       setTimeout(() => setStep(step + 1), 250); 
     } else {
-      onComplete({...answers, [currentKey]: option});
+      // End of quiz - Show Result Screen
+      setShowResult(true);
+      if(onComplete) onComplete({...answers, [key]: value});
     }
   };
 
-  // Optimized Animation Variants (Reduced stiffness for mobile smoothness)
+  // Animation Variants
   const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
-    },
-    exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
+    hidden: { opacity: 0, x: 20 },
+    show: { opacity: 1, x: 0, transition: { staggerChildren: 0.05 } },
+    exit: { opacity: 0, x: -20, transition: { duration: 0.2 } }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 50, damping: 20 } }
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0 }
   };
+
+  if (showResult) {
+    return <ResultScreen userName={userName} />;
+  }
 
   const currentStepData = steps[step];
   const progress = ((step + 1) / steps.length) * 100;
 
   return (
-    <div className="w-full h-full relative bg-[#121212] overflow-hidden font-inter">
+    <div className="w-full h-full relative bg-[#121212] overflow-hidden font-inter text-white">
       
-      {/* --- 1. OPTIMIZED CINEMATIC BACKGROUND --- */}
-      {/* Removed Framer Motion from Image. Used CSS transform-gpu for lag-free rendering */}
+      {/* --- BACKGROUND --- */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <img 
-            src={IMAGES.stylistBg} 
-            alt="Background" 
-            className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale-[30%] scale-105 transform-gpu" 
-        />
-        {/* Heavy Gradient Vignette for Focus (Static) */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#121212]"></div>
-        
-        {/* Static Noise Texture instead of mix-blend animation */}
+        <img src={IMAGES.stylistBg} alt="Bg" className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale-[30%] scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-[#121212]"></div>
         <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
       </div>
 
-      {/* --- 2. HEADER & PROGRESS --- */}
+      {/* --- HEADER --- */}
       <div className="absolute top-0 left-0 w-full p-6 z-20">
         <div className="flex justify-between items-center text-white/80 mb-6">
             <button className="p-2 rounded-full hover:bg-white/10 transition-colors"><ChevronLeft size={20} /></button>
             <span className="text-[10px] font-bold tracking-[0.25em] uppercase">Siena AI</span>
             <div className="w-9"></div>
         </div>
-        
-        {/* Luxe Progress Line - Optimized layout animation */}
         <div className="w-full h-[2px] bg-white/10 rounded-full overflow-hidden">
             <motion.div 
                 layout
@@ -596,8 +694,8 @@ const AIStylistQuiz = ({ userName, onComplete }) => {
         </div>
       </div>
 
-      {/* --- 3. MAIN INTERACTION AREA --- */}
-      <div className="absolute inset-0 flex flex-col justify-end pb-12 px-6 z-20">
+      {/* --- MAIN CONTENT --- */}
+      <div className="absolute inset-0 flex flex-col pt-28 pb-24 px-6 z-20 overflow-y-auto no-scrollbar">
         
         <AnimatePresence mode="wait" custom={direction}>
             <motion.div 
@@ -606,73 +704,174 @@ const AIStylistQuiz = ({ userName, onComplete }) => {
                 initial="hidden"
                 animate="show"
                 exit="exit"
-                className="flex flex-col items-center text-center"
+                className="flex flex-col items-center text-center w-full max-w-md mx-auto"
             >
-                {/* Question Number */}
+                {/* Step Indicator */}
                 <motion.span variants={itemVariants} className="text-[10px] font-bold text-[#00ff9d] tracking-widest uppercase mb-4 border border-[#00ff9d]/30 px-3 py-1 rounded-full backdrop-blur-md">
-                    Step {step + 1} of {steps.length}
+                    Step {step + 1}
                 </motion.span>
 
-                {/* The Question */}
-                <motion.h2 variants={itemVariants} className="font-playfair text-4xl md:text-5xl font-bold text-white mb-3 leading-[1.1] tracking-tight drop-shadow-xl">
+                {/* Question */}
+                <motion.h2 variants={itemVariants} className="font-playfair text-3xl md:text-4xl font-bold text-white mb-3 leading-[1.1] tracking-tight drop-shadow-xl">
                     {currentStepData.question}
                 </motion.h2>
-                
-                <motion.p variants={itemVariants} className="text-gray-300 text-sm font-medium tracking-wide mb-10 max-w-xs leading-relaxed">
+                <motion.p variants={itemVariants} className="text-gray-300 text-sm font-medium tracking-wide mb-8 max-w-xs leading-relaxed">
                     {currentStepData.subtext}
                 </motion.p>
 
-                {/* Options Grid */}
-                <motion.div variants={itemVariants} className="w-full grid grid-cols-2 gap-4 mb-12">
-                    {currentStepData.options.map((opt, idx) => (
-                        <motion.button 
-                            key={`${step}-${idx}`}
-                            // Reduced scale factor to prevent pixel-snapping jitter on mobile
-                            whileHover={{ scale: 1.02, backgroundColor: "rgba(90, 0, 224, 0.25)", borderColor: "rgba(90, 0, 224, 0.6)" }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handleOptionClick(opt)}
-                            className="relative group backdrop-blur-xl bg-white/5 border border-white/10 text-white py-6 px-2 rounded-[24px] font-medium text-xs md:text-sm tracking-wider uppercase transition-colors duration-300 overflow-hidden"
-                        >
-                            <span className="relative z-10">{opt}</span>
-                            {/* Replaced complex gradient animation with CSS hover for performance */}
-                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        </motion.button>
-                    ))}
-                </motion.div>
+                {/* --- RENDERERS --- */}
+                
+                {/* 1. INPUT RENDERER */}
+                {currentStepData.type === 'input' && (
+                    <motion.div variants={itemVariants} className="w-full flex flex-col items-center gap-4">
+                        <input 
+                            type="text" 
+                            autoFocus
+                            placeholder={currentStepData.placeholder}
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            className="w-full bg-white/5 border border-white/20 rounded-2xl px-6 py-4 text-center text-2xl text-white placeholder-white/20 focus:outline-none focus:border-[#00ff9d]/50 transition-colors backdrop-blur-xl"
+                        />
+                        <button onClick={handleInputNext} className="flex items-center gap-2 bg-[#00ff9d] text-black px-8 py-3 rounded-full font-bold uppercase tracking-wider text-xs hover:bg-white transition-colors">
+                            Next <ArrowRight size={16} />
+                        </button>
+                    </motion.div>
+                )}
+
+                {/* 2. COLOR GRID RENDERER */}
+                {currentStepData.type === 'color_selection' && (
+                    <motion.div variants={itemVariants} className="w-full grid grid-cols-3 gap-3">
+                        {currentStepData.options.map((opt, idx) => (
+                            <motion.button 
+                                key={idx}
+                                onClick={() => handleOptionClick(opt)}
+                                whileTap={{ scale: 0.95 }}
+                                className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                            >
+                                <div className="w-10 h-10 rounded-full border border-white/20 shadow-lg" style={{ backgroundColor: opt.color }}>
+                                     {opt.label === "Whites" && <div className="w-full h-full border border-gray-300 rounded-full" />}
+                                </div>
+                                <span className="text-[10px] uppercase tracking-wider font-medium">{opt.label}</span>
+                            </motion.button>
+                        ))}
+                    </motion.div>
+                )}
+
+                {/* 3. SCROLLABLE LIST RENDERER (For Work/Brands) */}
+                {currentStepData.type === 'scrollable_selection' && (
+                    <motion.div variants={itemVariants} className="w-full h-[300px] overflow-y-auto pr-2 grid grid-cols-1 gap-3 custom-scrollbar">
+                        {currentStepData.options.map((opt, idx) => (
+                            <motion.button 
+                                key={idx}
+                                onClick={() => handleOptionClick(opt)}
+                                className="w-full py-4 px-6 rounded-xl bg-white/5 border border-white/10 text-left hover:bg-[#5a00e0]/20 hover:border-[#5a00e0]/50 transition-all flex justify-between items-center group"
+                            >
+                                <span className="text-sm font-medium tracking-wide">{opt}</span>
+                                <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-[#00ff9d]" />
+                            </motion.button>
+                        ))}
+                    </motion.div>
+                )}
+
+                {/* 4. STANDARD/COMPLEX GRID RENDERER */}
+                {(currentStepData.type === 'selection' || currentStepData.type === 'complex_selection') && (
+                    <motion.div variants={itemVariants} className={`w-full grid gap-3 ${currentStepData.type === 'complex_selection' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                        {currentStepData.options.map((opt, idx) => {
+                            const isComplex = typeof opt === 'object';
+                            return (
+                                <motion.button 
+                                    key={idx}
+                                    whileHover={{ scale: 1.02, backgroundColor: "rgba(90, 0, 224, 0.25)", borderColor: "rgba(90, 0, 224, 0.6)" }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => handleOptionClick(opt)}
+                                    className="relative group backdrop-blur-xl bg-white/5 border border-white/10 text-white py-5 px-4 rounded-[20px] text-left transition-colors duration-300 overflow-hidden"
+                                >
+                                    <div className="relative z-10 flex flex-col items-center text-center w-full">
+                                        <span className={`font-medium tracking-wider uppercase ${isComplex ? 'text-sm text-[#00ff9d] mb-1' : 'text-xs md:text-sm'}`}>
+                                            {isComplex ? opt.label : opt}
+                                        </span>
+                                        {isComplex && <span className="text-xs text-gray-400 capitalize">{opt.desc}</span>}
+                                    </div>
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                </motion.button>
+                            );
+                        })}
+                    </motion.div>
+                )}
 
             </motion.div>
         </AnimatePresence>
+      </div>
 
-        {/* --- 4. THE "SIENA" DIGITAL SOUL (Performance Optimized) --- */}
-        <div className="w-full flex justify-center relative">
-            {/* Pulsating Core */}
-            <div className="relative w-20 h-20 flex items-center justify-center">
-                 {/* Outer Ripples - REPLACED BLUR WITH RADIAL GRADIENT (FAST) */}
+      {/* --- BOTTOM SOUL UI --- */}
+      <div className="absolute bottom-6 left-0 w-full flex justify-center z-30">
+            <div className="relative w-16 h-16 flex items-center justify-center">
                  <motion.div 
                     animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }} 
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(90,0,224,0.4)_0%,transparent_70%)]"
                  />
-                 {/* Inner Ripples - REPLACED BLUR WITH RADIAL GRADIENT (FAST) */}
-                 <motion.div 
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.8, 0.2, 0.8] }} 
-                    transition={{ duration: 2, repeat: Infinity, delay: 0.5, ease: "easeInOut" }}
-                    className="absolute inset-2 rounded-full bg-[radial-gradient(circle,rgba(113,76,254,0.5)_0%,transparent_70%)]"
-                 />
-                 
-                 {/* The Button */}
-                 <button className="relative z-10 w-14 h-14 bg-gradient-to-br from-[#1a1a1a] to-black border border-white/10 rounded-full flex items-center justify-center shadow-[0_10px_30px_-10px_rgba(90,0,224,0.6)] active:scale-90 transition-transform group">
-                    <Mic size={22} className="text-white/90 group-hover:text-[#00ff9d] transition-colors duration-300" />
+                 <button className="relative z-10 w-12 h-12 bg-gradient-to-br from-[#1a1a1a] to-black border border-white/10 rounded-full flex items-center justify-center shadow-[0_10px_30px_-10px_rgba(90,0,224,0.6)] active:scale-90 transition-transform group">
+                    <Mic size={20} className="text-white/90 group-hover:text-[#00ff9d] transition-colors duration-300" />
                  </button>
             </div>
-            
-            <p className="absolute -bottom-6 text-[9px] text-gray-500 tracking-[0.2em] uppercase animate-pulse">Tap to speak</p>
-        </div>
-
       </div>
     </div>
   );
 };
+
+// --- NEW RESULT COMPONENT (Based on "Rustic Casual" screenshot) ---
+const ResultScreen = ({ userName }) => {
+    return (
+        <div className="w-full h-full relative bg-[#121212] overflow-hidden font-inter text-white flex flex-col items-center justify-center p-6">
+            <div className="absolute inset-0 bg-gradient-to-b from-black via-[#1a1a1a] to-[#121212]"></div>
+            <div className="relative z-10 w-full max-w-md text-center">
+                
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}>
+                    <h1 className="font-playfair text-4xl mb-2">You're a <span className="text-[#00ff9d] italic">Rustic Casual</span></h1>
+                    <p className="text-white/60 text-xs tracking-widest uppercase mb-12">Analysis Complete</p>
+                </motion.div>
+
+                {/* Abstract Venn Diagram Representation using CSS Circles */}
+                <div className="relative w-64 h-64 mx-auto mb-12">
+                    <motion.div 
+                        initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
+                        className="absolute top-0 left-4 w-32 h-32 rounded-full bg-blue-600/80 mix-blend-screen flex items-center justify-center backdrop-blur-sm"
+                    >
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Edgy</span>
+                    </motion.div>
+                    <motion.div 
+                        initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}
+                        className="absolute top-4 right-4 w-36 h-36 rounded-full bg-emerald-700/80 mix-blend-screen flex items-center justify-center backdrop-blur-sm"
+                    >
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Heritage</span>
+                    </motion.div>
+                    <motion.div 
+                        initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
+                        className="absolute bottom-2 left-12 w-28 h-28 rounded-full bg-amber-100/90 mix-blend-screen text-black flex items-center justify-center backdrop-blur-sm shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+                    >
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Active</span>
+                    </motion.div>
+                </div>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }} className="bg-white/5 border border-white/10 rounded-2xl p-6 text-left backdrop-blur-md">
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                        Your style is multi-layered. You prioritize <span className="text-white font-bold">comfort and functionality</span> without compromising on style. Think pretty plaids, go-to denim, and soft fleece.
+                    </p>
+                </motion.div>
+                
+                <motion.button 
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}
+                    className="mt-8 bg-[#00ff9d] text-black w-full py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-white transition-colors shadow-[0_0_20px_rgba(0,255,157,0.3)]"
+                >
+                    View Your Wardrobe
+                </motion.button>
+            </div>
+        </div>
+    )
+}
+
+
 
 // --- 4. ANALYZING / LOADING STATE ---
 // --- 4. UPDATED ANALYZING SCREEN (ELEGANT LIGHT MODE) ---
