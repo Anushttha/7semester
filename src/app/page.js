@@ -65,6 +65,18 @@ const BODY_ICONS = {
   )
 };
 
+// Helper to format Height (Inches -> Ft' In")
+const formatHeight = (inches) => {
+    const ft = Math.floor(inches / 12);
+    const remain = inches % 12;
+    return `${ft}' ${remain}"`;
+};
+
+// Helper to format Weight (Lbs)
+const formatWeight = (lbs) => {
+    return `${lbs} lbs`;
+};
+
 const pageVariants = {
   initial: { opacity: 0, x: 20 },
   animate: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 100, damping: 20 } },
@@ -89,6 +101,8 @@ const App = () => {
   const [selectedOutfit, setSelectedOutfit] = useState(null); 
   const [cart, setCart] = useState([]);
   const [isHomeBlurred, setIsHomeBlurred] = useState(false); 
+  // Add this near your other useState hooks
+ 
 
   // Navigation Helper
   const navigateTo = useCallback((screen) => {
@@ -542,6 +556,7 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
   const [inputValue, setInputValue] = useState(""); 
   const [direction, setDirection] = useState(1);
   const [showResult, setShowResult] = useState(false);
+   const [sliderValue, setSliderValue] = useState(0);
   
   // New State for Multi-Select
   const [currentSelections, setCurrentSelections] = useState([]);
@@ -632,20 +647,28 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
         key: 'fit_sleeves',
         type: 'selection'
     },
+  // ... previous steps ...
     {
         question: "How tall are you?",
-        subtext: "Please enter your height (e.g., 5'10\").",
+        subtext: "Drag to adjust.",
         key: 'height',
-        type: 'input',
-        placeholder: "5' 10\""
+        type: 'slider',
+        min: 48,  // 4' 0"
+        max: 84,  // 7' 0"
+        defaultValue: 66, // Starts at 5' 6" (Average)
+        format: formatHeight
     },
     {
         question: "What is your weight?",
-        subtext: "Used strictly for size calculation (lbs/kg).",
+        subtext: "Drag to adjust.",
         key: 'weight',
-        type: 'input',
-        placeholder: "165 lbs"
+        type: 'slider',
+        min: 80,
+        max: 300,
+        defaultValue: 150, // Starts at 150 lbs (Common)
+        format: formatWeight
     },
+    // ... budget step ...
     {
       question: "What is your budget?",
       subtext: "Select all ranges that apply.",
@@ -656,9 +679,15 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
   ];
 
   // Reset selections when step changes
+ // Reset selections/values when step changes
   useEffect(() => {
     setCurrentSelections([]);
     setInputValue("");
+    
+    // Set default value if it's a slider step
+    if (steps[step].type === 'slider') {
+        setSliderValue(steps[step].defaultValue);
+    }
   }, [step]);
 
   // NEW: Handle Toggle Logic (Add/Remove from array)
@@ -675,9 +704,19 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
   };
 
   // NEW: Handle "Next" Button Click
-  const handleNextStep = () => {
-    const currentKey = steps[step].key;
-    const finalValue = steps[step].type === 'input' ? inputValue : currentSelections;
+const handleNextStep = () => {
+    const currentStepData = steps[step];
+    const currentKey = currentStepData.key;
+    
+    // Determine the final value based on type
+    let finalValue;
+    if (currentStepData.type === 'input') {
+        finalValue = inputValue;
+    } else if (currentStepData.type === 'slider') {
+        finalValue = currentStepData.format(sliderValue); // Save formatted string (e.g. "5' 9\"")
+    } else {
+        finalValue = currentSelections;
+    }
 
     // Save
     setAnswers(prev => ({...prev, [currentKey]: finalValue}));
@@ -712,10 +751,12 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
   const progress = ((step + 1) / steps.length) * 100;
   
   // Check if we can proceed (Input needs text, Selection needs at least 1 item)
+// Allow proceed if it's a slider (since it always has a value)
   const canProceed = currentStepData.type === 'input' 
     ? inputValue.trim().length > 0 
-    : currentSelections.length > 0;
-
+    : currentStepData.type === 'slider' 
+        ? true 
+        : currentSelections.length > 0;
   return (
     <div className="w-full h-full relative bg-[#121212] overflow-hidden font-inter text-white">
       
@@ -777,19 +818,43 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
                 {/* --- RENDERERS --- */}
                 
                 {/* 1. INPUT RENDERER */}
-                {currentStepData.type === 'input' && (
-                    <motion.div variants={itemVariants} className="w-full flex flex-col items-center gap-4">
-                        <input 
-                            type="text" 
-                            autoFocus
-                            placeholder={currentStepData.placeholder}
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            className="w-full bg-white/5 border border-white/20 rounded-2xl px-6 py-4 text-center text-2xl text-white placeholder-white/20 focus:outline-none focus:border-[#00ff9d]/50 transition-colors backdrop-blur-xl"
-                        />
-                        {/* Note: Button logic handled below globally now */}
-                    </motion.div>
-                )}
+               {/* 5. SLIDER RENDERER (Height/Weight) */}
+{currentStepData.type === 'slider' && (
+    <motion.div variants={itemVariants} className="w-full flex flex-col items-center gap-10 py-4">
+        
+        {/* Large Display Value */}
+        <div className="relative">
+            <span className="text-6xl font-bold text-white tracking-tighter drop-shadow-[0_0_15px_rgba(0,255,157,0.5)]">
+                {currentStepData.format(sliderValue)}
+            </span>
+            {/* Decorative underline */}
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-[#00ff9d] rounded-full" />
+        </div>
+
+        {/* The Slider Control */}
+        <div className="w-full px-4 relative">
+            {/* Custom Range Input */}
+            <input
+                type="range"
+                min={currentStepData.min}
+                max={currentStepData.max}
+                value={sliderValue}
+                onChange={(e) => setSliderValue(Number(e.target.value))}
+                className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#00ff9d] focus:outline-none focus:ring-2 focus:ring-[#00ff9d]/50"
+                style={{
+                    // Gradient track logic to fill up to the thumb
+                    backgroundImage: `linear-gradient(to right, #00ff9d 0%, #00ff9d ${((sliderValue - currentStepData.min) / (currentStepData.max - currentStepData.min)) * 100}%, rgba(255,255,255,0.1) ${((sliderValue - currentStepData.min) / (currentStepData.max - currentStepData.min)) * 100}%, rgba(255,255,255,0.1) 100%)`
+                }}
+            />
+            
+            {/* Min/Max Labels */}
+            <div className="flex justify-between text-xs text-white/40 mt-4 font-medium tracking-widest uppercase">
+                <span>{currentStepData.format(currentStepData.min)}</span>
+                <span>{currentStepData.format(currentStepData.max)}</span>
+            </div>
+        </div>
+    </motion.div>
+)}
 
                 {/* 2. COLOR GRID RENDERER (MULTI SELECT) */}
                 {currentStepData.type === 'color_selection' && (
@@ -932,6 +997,37 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
       </div>
     </div>
   );
+  <style>{`
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 28px;
+    width: 28px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 4px solid #00ff9d;
+    box-shadow: 0 0 20px rgba(0, 255, 157, 0.6);
+    cursor: pointer;
+    margin-top: -10px; /* Adjusts thumb position relative to track */
+  }
+  input[type=range]::-moz-range-thumb {
+    height: 28px;
+    width: 28px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 4px solid #00ff9d;
+    box-shadow: 0 0 20px rgba(0, 255, 157, 0.6);
+    cursor: pointer;
+    border: none;
+  }
+  /* Remove default track styles so our gradient works */
+  input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    cursor: pointer;
+    background: transparent; 
+    border-radius: 999px;
+  }
+`}</style>
 };
 
 // --- NEW RESULT COMPONENT (Based on "Rustic Casual" screenshot) ---
