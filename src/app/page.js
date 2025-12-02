@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 // Find this line at the top and update it:
-import { ArrowRight, Camera, Mic, Bell, Heart, Check, ShoppingBag, Square, Search, ChevronLeft, Share2, X, Mail, Lock, Eye, EyeOff, User as UserIcon } from 'lucide-react';
+import { ArrowRight, Camera, Mic, Bell, Heart, Check, ShoppingBag, Square, Search, ChevronLeft, Share2, X, Mail, Lock, Eye, EyeOff, Upload, Sparkles, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 
 
@@ -97,10 +97,13 @@ const itemFadeUp = {
 // --- Main App Component ---
 const App = () => {
   const [currentScreen, setCurrentScreen] = useState('onboarding'); 
-  const [userProfile, setUserProfile] = useState({ name: '', style: [], budget: '', size: '' });
+ 
   const [selectedOutfit, setSelectedOutfit] = useState(null); 
   const [cart, setCart] = useState([]);
   const [isHomeBlurred, setIsHomeBlurred] = useState(false); 
+  
+  // 2. Add 'image' to your userProfile state
+  const [userProfile, setUserProfile] = useState({ name: '', image: null, style: [], budget: '', size: '' });
   // Add this near your other useState hooks
  
 
@@ -140,8 +143,14 @@ const App = () => {
       <div className="w-full h-full md:max-w-[400px] md:h-[850px] bg-[#f9fafc] relative shadow-2xl md:rounded-[40px] overflow-hidden flex flex-col">
         
         {/* Routing Logic */}
-        {currentScreen === 'onboarding' && <Onboarding onNext={() => setCurrentScreen('auth')} />}
-        {currentScreen === 'auth' && <Auth onComplete={(name) => { setUserProfile({...userProfile, name}); setCurrentScreen('quiz'); }} />}
+       {currentScreen === 'onboarding' && <Onboarding onNext={() => setCurrentScreen('auth')} />}
+        
+        {/* CHANGE 1: Auth now goes to 'upload' instead of 'quiz' */}
+        {currentScreen === 'auth' && <Auth onComplete={(name) => { setUserProfile({...userProfile, name}); setCurrentScreen('upload'); }} />}
+        
+        {/* CHANGE 2: Add the PhotoUpload Screen here */}
+        {currentScreen === 'upload' && <PhotoUpload userName={userProfile.name} onNext={(image) => { setUserProfile({...userProfile, image}); setCurrentScreen('quiz'); }} />}
+        
         {currentScreen === 'quiz' && <AIStylistQuiz userName={userProfile.name} onComplete={(data) => { setUserProfile({...userProfile, ...data}); setCurrentScreen('analyzing'); }} />}
         {currentScreen === 'analyzing' && <Analyzing onComplete={() => setCurrentScreen('home')} />}
         
@@ -547,7 +556,122 @@ const Auth = ({ onComplete }) => {
 // --- 3. AI STYLIST / PREFERENCE QUIZ ---
 // --- 3. UPDATED AI STYLIST QUIZ (Cinematic Editorial) ---
 
+// --- NEW COMPONENT: PHOTO UPLOAD SCREEN ---
+const PhotoUpload = ({ onNext, userName }) => {
+  const [image, setImage] = useState(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setImage(url);
+      startScanning();
+    }
+  };
+
+  const startScanning = () => {
+    setIsScanning(true);
+    // Simulate AI Analysis
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 2;
+      setScanProgress(progress);
+      if (progress >= 100) {
+        clearInterval(interval);
+        setTimeout(() => onNext(image), 800); // Auto-advance after scan
+      }
+    }, 30);
+  };
+
+  return (
+    <div className="w-full h-full relative bg-[#121212] overflow-hidden font-inter text-white flex flex-col items-center justify-center p-6">
+      
+      {/* Background Ambience */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }} transition={{ duration: 8, repeat: Infinity }} className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#5a00e0]/20 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+      </div>
+
+      <div className="relative z-10 w-full max-w-sm text-center">
+        
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <span className="text-[10px] font-bold text-[#00ff9d] tracking-[0.25em] uppercase border border-[#00ff9d]/30 px-3 py-1 rounded-full backdrop-blur-md">
+            Step 1 of 2
+          </span>
+          <h1 className="font-playfair text-3xl font-bold mt-6 mb-2">
+            Let's see you, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5a00e0] to-[#714cfe]">{userName || 'Style Icon'}</span>.
+          </h1>
+          <p className="text-gray-400 text-sm">Upload a photo so our AI can analyze your skin tone and features.</p>
+        </motion.div>
+
+        {/* Upload Area / Scanner */}
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }} 
+          animate={{ scale: 1, opacity: 1 }} 
+          transition={{ delay: 0.2 }}
+          className="relative w-full aspect-[3/4] rounded-[32px] overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl group"
+        >
+          {image ? (
+            <>
+              {/* The Uploaded Image */}
+              <img src={image} alt="User" className="w-full h-full object-cover" />
+              
+              {/* Scanning Overlay Animation */}
+              {isScanning && (
+                <div className="absolute inset-0 z-20">
+                  <motion.div 
+                    initial={{ top: 0 }} 
+                    animate={{ top: "100%" }} 
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="absolute left-0 right-0 h-1 bg-[#00ff9d] shadow-[0_0_20px_#00ff9d]"
+                  />
+                  <div className="absolute inset-0 bg-[#00ff9d]/10" />
+                  
+                  {/* Analysis Text */}
+                  <div className="absolute bottom-6 left-0 w-full text-center">
+                    <div className="inline-flex items-center gap-2 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-[#00ff9d]/30">
+                        <Sparkles size={14} className="text-[#00ff9d] animate-spin-slow" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#00ff9d]">
+                            Analyzing Skin Tone {scanProgress}%
+                        </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Empty State */
+            <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-colors">
+              <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+              
+              <div className="w-20 h-20 rounded-full border border-dashed border-white/30 flex items-center justify-center mb-4 group-hover:border-[#5a00e0] group-hover:scale-110 transition-all duration-300">
+                <Upload size={24} className="text-white/50 group-hover:text-[#5a00e0]" />
+              </div>
+              <span className="text-sm font-bold text-white tracking-wide">Tap to Upload</span>
+              <span className="text-xs text-gray-500 mt-2">or drag and drop</span>
+            </label>
+          )}
+
+          {/* Corner Accents */}
+          <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-white/20 rounded-tl-lg pointer-events-none"></div>
+          <div className="absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 border-white/20 rounded-tr-lg pointer-events-none"></div>
+          <div className="absolute bottom-4 left-4 w-4 h-4 border-b-2 border-l-2 border-white/20 rounded-bl-lg pointer-events-none"></div>
+          <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-white/20 rounded-br-lg pointer-events-none"></div>
+        </motion.div>
+
+        {/* Skip Button */}
+        {!image && (
+          <button onClick={() => onNext(null)} className="mt-8 text-xs font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors">
+            Skip for now
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
 
 
 const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
