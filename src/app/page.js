@@ -35,6 +35,36 @@ const IMAGES = {
 };
 
 
+// SVG Path definitions for Body Shapes
+const BODY_ICONS = {
+  hourglass: (color) => (
+    <svg width="40" height="60" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 5C10 5 12 25 20 30C28 25 30 5 30 5H10Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M10 55C10 55 12 35 20 30C28 35 30 55 30 55H10Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+  triangle: (color) => (
+    <svg width="40" height="60" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 10H26C26 10 28 40 34 50H6C12 40 14 10 14 10Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+  rectangle: (color) => (
+    <svg width="40" height="60" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="10" y="10" width="20" height="40" rx="2" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+  oval: (color) => (
+    <svg width="40" height="60" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="20" cy="30" rx="12" ry="20" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+  heart: (color) => (
+    <svg width="40" height="60" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 10H34C34 10 32 30 20 50C8 30 6 10 6 10Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+};
+
 const pageVariants = {
   initial: { opacity: 0, x: 20 },
   animate: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 100, damping: 20 } },
@@ -504,26 +534,30 @@ const Auth = ({ onComplete }) => {
 // --- 3. UPDATED AI STYLIST QUIZ (Cinematic Editorial) ---
 
 
+
+
 const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [inputValue, setInputValue] = useState(""); 
   const [direction, setDirection] = useState(1);
-  const [showResult, setShowResult] = useState(false); // To show the "Rustic Casual" screen
+  const [showResult, setShowResult] = useState(false);
+  
+  // New State for Multi-Select
+  const [currentSelections, setCurrentSelections] = useState([]);
 
-  // --- FULL DATA FROM ALL SCREENSHOTS ---
+  // --- FULL DATA ---
   const steps = [
     {
       question: `Hi ${userName}, I'm Siena.`,
-      subtext: "Let's curate your look. What are you looking for today?",
+      subtext: "Let's curate your look. Select as many as you like.",
       options: ["Casual", "Workwear", "Social Occasions", "Active / Sport"], 
       key: 'category',
       type: 'selection'
     },
     {
         question: "What do you do for work?",
-        subtext: "I'll curate looks that fit your industry.",
-        // Long list from screenshot - handled by scrollable view
+        subtext: "Select all industries that apply.",
         options: [
             "Architecture", "Art / Design", "Building / Maintenance", "Business", 
             "Community / Social Service", "Education", "Entertainer", 
@@ -535,7 +569,7 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
     },
     {
         question: "Where do you like to shop?",
-        subtext: "This helps me understand your brand preferences.",
+        subtext: "Select your favorite brands.",
         options: [
             "Zara", "H&M", "Nordstrom", "Banana Republic", "Madewell", 
             "Anthropologie", "Lululemon", "J.Crew", "Gap", "Old Navy", 
@@ -544,15 +578,15 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
         key: 'brands',
         type: 'scrollable_selection'
     },
-    {
+{
         question: "What is your body shape?",
-        subtext: "This helps me understand your proportions.",
+        subtext: "Select the shape that best matches you.",
         options: [
-            { label: "Hourglass", desc: "Waist is narrowest part" },
-            { label: "Triangle", desc: "Hips broader than shoulders" },
-            { label: "Rectangle", desc: "Hips, shoulders, waist equal" },
-            { label: "Oval", desc: "Hips/shoulders narrower than waist" },
-            { label: "Heart", desc: "Hips narrower than shoulders" }
+            { id: 'hourglass', label: "Hourglass", desc: "Waist is narrowest part" },
+            { id: 'triangle', label: "Triangle", desc: "Hips broader than shoulders" },
+            { id: 'rectangle', label: "Rectangle", desc: "Hips, shoulders, waist equal" },
+            { id: 'oval', label: "Oval", desc: "Hips/shoulders narrower than waist" },
+            { id: 'heart', label: "Heart", desc: "Hips narrower than shoulders" }
         ],
         key: 'body_shape',
         type: 'complex_selection' 
@@ -589,7 +623,7 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
         subtext: "Select items you never wear.",
         options: ["Dresses", "Jackets", "Skirts", "Pants", "Shorts", "Jeans", "Shoes", "Bags", "Blazers", "Jewelry"],
         key: 'avoid_items',
-        type: 'selection' // Using selection for simplicity, can act as multi-select in future
+        type: 'selection'
     },
     {
         question: "How do sleeves tend to fit?",
@@ -614,36 +648,47 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
     },
     {
       question: "What is your budget?",
-      subtext: "I will find the best pieces within your range.",
+      subtext: "Select all ranges that apply.",
       options: ["Under $100", "$100 - $300", "$300 - $800", "Luxury / No Limit"],
       key: 'budget',
       type: 'selection'
     }
   ];
 
-  const handleOptionClick = (option) => {
-    const value = typeof option === 'object' ? option.label : option;
-    const currentKey = steps[step].key;
-    saveAndNext(currentKey, value);
-  };
-
-  const handleInputNext = () => {
-    if (!inputValue.trim()) return;
-    const currentKey = steps[step].key;
-    saveAndNext(currentKey, inputValue);
+  // Reset selections when step changes
+  useEffect(() => {
+    setCurrentSelections([]);
     setInputValue("");
+  }, [step]);
+
+  // NEW: Handle Toggle Logic (Add/Remove from array)
+  const handleOptionToggle = (option) => {
+    const value = typeof option === 'object' ? option.label : option;
+    
+    setCurrentSelections(prev => {
+      if (prev.includes(value)) {
+        return prev.filter(item => item !== value); // Remove if exists
+      } else {
+        return [...prev, value]; // Add if doesn't exist
+      }
+    });
   };
 
-  const saveAndNext = (key, value) => {
-    setAnswers(prev => ({...prev, [key]: value}));
+  // NEW: Handle "Next" Button Click
+  const handleNextStep = () => {
+    const currentKey = steps[step].key;
+    const finalValue = steps[step].type === 'input' ? inputValue : currentSelections;
+
+    // Save
+    setAnswers(prev => ({...prev, [currentKey]: finalValue}));
     setDirection(1);
     
+    // Navigate
     if (step < steps.length - 1) {
-      setTimeout(() => setStep(step + 1), 250); 
+      setStep(step + 1);
     } else {
-      // End of quiz - Show Result Screen
       setShowResult(true);
-      if(onComplete) onComplete({...answers, [key]: value});
+      if(onComplete) onComplete({...answers, [currentKey]: finalValue});
     }
   };
 
@@ -665,6 +710,11 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
 
   const currentStepData = steps[step];
   const progress = ((step + 1) / steps.length) * 100;
+  
+  // Check if we can proceed (Input needs text, Selection needs at least 1 item)
+  const canProceed = currentStepData.type === 'input' 
+    ? inputValue.trim().length > 0 
+    : currentSelections.length > 0;
 
   return (
     <div className="w-full h-full relative bg-[#121212] overflow-hidden font-inter text-white">
@@ -679,7 +729,12 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
       {/* --- HEADER --- */}
       <div className="absolute top-0 left-0 w-full p-6 z-20">
         <div className="flex justify-between items-center text-white/80 mb-6">
-            <button className="p-2 rounded-full hover:bg-white/10 transition-colors"><ChevronLeft size={20} /></button>
+            <button 
+                onClick={() => step > 0 && setStep(step - 1)}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            >
+                <ChevronLeft size={20} />
+            </button>
             <span className="text-[10px] font-bold tracking-[0.25em] uppercase">Siena AI</span>
             <div className="w-9"></div>
         </div>
@@ -695,7 +750,7 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
       </div>
 
       {/* --- MAIN CONTENT --- */}
-      <div className="absolute inset-0 flex flex-col pt-28 pb-24 px-6 z-20 overflow-y-auto no-scrollbar">
+      <div className="absolute inset-0 flex flex-col pt-28 pb-32 px-6 z-20 overflow-y-auto no-scrollbar">
         
         <AnimatePresence mode="wait" custom={direction}>
             <motion.div 
@@ -732,76 +787,135 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
                             onChange={(e) => setInputValue(e.target.value)}
                             className="w-full bg-white/5 border border-white/20 rounded-2xl px-6 py-4 text-center text-2xl text-white placeholder-white/20 focus:outline-none focus:border-[#00ff9d]/50 transition-colors backdrop-blur-xl"
                         />
-                        <button onClick={handleInputNext} className="flex items-center gap-2 bg-[#00ff9d] text-black px-8 py-3 rounded-full font-bold uppercase tracking-wider text-xs hover:bg-white transition-colors">
-                            Next <ArrowRight size={16} />
-                        </button>
+                        {/* Note: Button logic handled below globally now */}
                     </motion.div>
                 )}
 
-                {/* 2. COLOR GRID RENDERER */}
+                {/* 2. COLOR GRID RENDERER (MULTI SELECT) */}
                 {currentStepData.type === 'color_selection' && (
                     <motion.div variants={itemVariants} className="w-full grid grid-cols-3 gap-3">
-                        {currentStepData.options.map((opt, idx) => (
-                            <motion.button 
-                                key={idx}
-                                onClick={() => handleOptionClick(opt)}
-                                whileTap={{ scale: 0.95 }}
-                                className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-                            >
-                                <div className="w-10 h-10 rounded-full border border-white/20 shadow-lg" style={{ backgroundColor: opt.color }}>
-                                     {opt.label === "Whites" && <div className="w-full h-full border border-gray-300 rounded-full" />}
-                                </div>
-                                <span className="text-[10px] uppercase tracking-wider font-medium">{opt.label}</span>
-                            </motion.button>
-                        ))}
-                    </motion.div>
-                )}
-
-                {/* 3. SCROLLABLE LIST RENDERER (For Work/Brands) */}
-                {currentStepData.type === 'scrollable_selection' && (
-                    <motion.div variants={itemVariants} className="w-full h-[300px] overflow-y-auto pr-2 grid grid-cols-1 gap-3 custom-scrollbar">
-                        {currentStepData.options.map((opt, idx) => (
-                            <motion.button 
-                                key={idx}
-                                onClick={() => handleOptionClick(opt)}
-                                className="w-full py-4 px-6 rounded-xl bg-white/5 border border-white/10 text-left hover:bg-[#5a00e0]/20 hover:border-[#5a00e0]/50 transition-all flex justify-between items-center group"
-                            >
-                                <span className="text-sm font-medium tracking-wide">{opt}</span>
-                                <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-[#00ff9d]" />
-                            </motion.button>
-                        ))}
-                    </motion.div>
-                )}
-
-                {/* 4. STANDARD/COMPLEX GRID RENDERER */}
-                {(currentStepData.type === 'selection' || currentStepData.type === 'complex_selection') && (
-                    <motion.div variants={itemVariants} className={`w-full grid gap-3 ${currentStepData.type === 'complex_selection' ? 'grid-cols-1' : 'grid-cols-2'}`}>
                         {currentStepData.options.map((opt, idx) => {
-                            const isComplex = typeof opt === 'object';
+                            const isSelected = currentSelections.includes(opt.label);
                             return (
                                 <motion.button 
                                     key={idx}
-                                    whileHover={{ scale: 1.02, backgroundColor: "rgba(90, 0, 224, 0.25)", borderColor: "rgba(90, 0, 224, 0.6)" }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => handleOptionClick(opt)}
-                                    className="relative group backdrop-blur-xl bg-white/5 border border-white/10 text-white py-5 px-4 rounded-[20px] text-left transition-colors duration-300 overflow-hidden"
+                                    onClick={() => handleOptionToggle(opt)}
+                                    whileTap={{ scale: 0.95 }}
+                                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-300 ${
+                                        isSelected 
+                                        ? "bg-[#00ff9d]/10 border-[#00ff9d] shadow-[0_0_15px_rgba(0,255,157,0.2)]" 
+                                        : "bg-white/5 border-white/10 hover:bg-white/10"
+                                    }`}
                                 >
-                                    <div className="relative z-10 flex flex-col items-center text-center w-full">
-                                        <span className={`font-medium tracking-wider uppercase ${isComplex ? 'text-sm text-[#00ff9d] mb-1' : 'text-xs md:text-sm'}`}>
-                                            {isComplex ? opt.label : opt}
-                                        </span>
-                                        {isComplex && <span className="text-xs text-gray-400 capitalize">{opt.desc}</span>}
+                                    <div className="relative w-10 h-10 rounded-full border border-white/20 shadow-lg" style={{ backgroundColor: opt.color }}>
+                                         {opt.label === "Whites" && <div className="w-full h-full border border-gray-300 rounded-full" />}
+                                         {isSelected && (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full">
+                                                <Check size={16} className="text-white" />
+                                            </div>
+                                         )}
                                     </div>
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                    <span className={`text-[10px] uppercase tracking-wider font-medium ${isSelected ? "text-[#00ff9d]" : "text-white"}`}>
+                                        {opt.label}
+                                    </span>
                                 </motion.button>
                             );
                         })}
                     </motion.div>
                 )}
 
+                {/* 3. SCROLLABLE LIST RENDERER (MULTI SELECT) */}
+                {currentStepData.type === 'scrollable_selection' && (
+                    <motion.div variants={itemVariants} className="w-full h-[300px] overflow-y-auto pr-2 grid grid-cols-1 gap-3 custom-scrollbar">
+                        {currentStepData.options.map((opt, idx) => {
+                            const isSelected = currentSelections.includes(opt);
+                            return (
+                                <motion.button 
+                                    key={idx}
+                                    onClick={() => handleOptionToggle(opt)}
+                                    className={`w-full py-4 px-6 rounded-xl border text-left transition-all flex justify-between items-center group ${
+                                        isSelected
+                                        ? "bg-[#00ff9d]/10 border-[#00ff9d]"
+                                        : "bg-white/5 border-white/10 hover:bg-[#5a00e0]/20 hover:border-[#5a00e0]/50"
+                                    }`}
+                                >
+                                    <span className={`text-sm font-medium tracking-wide ${isSelected ? "text-[#00ff9d]" : "text-white"}`}>{opt}</span>
+                                    {isSelected ? (
+                                        <Check size={16} className="text-[#00ff9d]" />
+                                    ) : (
+                                        <div className="w-4 h-4 rounded-full border border-white/20 group-hover:border-[#00ff9d]" />
+                                    )}
+                                </motion.button>
+                            );
+                        })}
+                    </motion.div>
+                )}
+
+                {/* 4. STANDARD/COMPLEX GRID RENDERER (MULTI SELECT) */}
+              {/* 4. STANDARD/COMPLEX GRID RENDERER (Updated with Icons) */}
+{(currentStepData.type === 'selection' || currentStepData.type === 'complex_selection') && (
+    <motion.div variants={itemVariants} className={`w-full grid gap-3 ${currentStepData.type === 'complex_selection' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+        {currentStepData.options.map((opt, idx) => {
+            const isComplex = typeof opt === 'object';
+            const value = isComplex ? opt.label : opt;
+            const isSelected = currentSelections.includes(value);
+
+            return (
+                <motion.button 
+                    key={idx}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleOptionToggle(opt)}
+                    className={`relative group backdrop-blur-xl border py-4 px-5 rounded-[20px] text-left transition-all duration-300 overflow-hidden flex items-center gap-5 ${
+                        isSelected 
+                        ? "bg-[#00ff9d]/10 border-[#00ff9d] shadow-[0_0_15px_rgba(0,255,157,0.15)]" 
+                        : "bg-white/5 border-white/10 text-white"
+                    }`}
+                >
+                    {/* ICON RENDERER (Only if ID exists) */}
+                    {isComplex && opt.id && BODY_ICONS[opt.id] && (
+                        <div className={`shrink-0 transition-colors duration-300 ${isSelected ? "text-[#00ff9d]" : "text-white/60 group-hover:text-white"}`}>
+                            {/* We pass the color explicitly based on selection state */}
+                            {BODY_ICONS[opt.id](isSelected ? "#00ff9d" : "currentColor")}
+                        </div>
+                    )}
+
+                    <div className="relative z-10 flex flex-col items-start w-full">
+                        <span className={`font-medium tracking-wider uppercase ${isComplex ? 'text-sm' : 'text-xs md:text-sm'} ${isSelected ? "text-[#00ff9d]" : "text-white"}`}>
+                            {isComplex ? opt.label : opt}
+                        </span>
+                        {isComplex && <span className="text-xs text-gray-400 capitalize mt-1">{opt.desc}</span>}
+                    </div>
+
+                    {/* Selection Glow */}
+                    {isSelected && <div className="absolute inset-0 bg-[#00ff9d]/5" />}
+                </motion.button>
+            );
+        })}
+    </motion.div>
+)}
             </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* --- FLOATING CONTINUE BUTTON --- */}
+      <AnimatePresence>
+        {canProceed && (
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="absolute bottom-28 left-0 w-full flex justify-center z-40 px-6"
+            >
+                <button 
+                    onClick={handleNextStep}
+                    className="w-full max-w-md bg-[#00ff9d] text-black font-bold uppercase tracking-widest text-sm py-4 rounded-full shadow-[0_0_20px_rgba(0,255,157,0.4)] hover:bg-white hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                    Continue <ArrowRight size={18} />
+                </button>
+            </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* --- BOTTOM SOUL UI --- */}
       <div className="absolute bottom-6 left-0 w-full flex justify-center z-30">
