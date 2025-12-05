@@ -74,35 +74,141 @@ const OUTFITS = [
 
 
 // SVG Path definitions for Body Shapes
-const BODY_ICONS = {
-  hourglass: (color) => (
-    <svg width="40" height="60" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M10 5C10 5 12 25 20 30C28 25 30 5 30 5H10Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M10 55C10 55 12 35 20 30C28 35 30 55 30 55H10Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
-  triangle: (color) => (
-    <svg width="40" height="60" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M14 10H26C26 10 28 40 34 50H6C12 40 14 10 14 10Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
-  rectangle: (color) => (
-    <svg width="40" height="60" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="10" y="10" width="20" height="40" rx="2" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
-  oval: (color) => (
-    <svg width="40" height="60" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="20" cy="30" rx="12" ry="20" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
-  heart: (color) => (
-    <svg width="40" height="60" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M6 10H34C34 10 32 30 20 50C8 30 6 10 6 10Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  )
+const BodyShapeIcons = ({ type, color }) => {
+  const stroke = color;
+  const fill = color === "#ffffff" ? "none" : `${color}20`; 
+
+  const shapes = {
+    hourglass: (
+      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]">
+        <path d="M30,20 Q30,50 45,50 Q60,50 70,50 Q70,20 70,20 L30,20 M30,80 Q30,50 45,50 Q60,50 70,50 Q70,80 70,80 L30,80" 
+              stroke={stroke} strokeWidth="3" fill={fill} strokeLinecap="round" />
+        <line x1="45" y1="50" x2="55" y2="50" stroke={stroke} strokeWidth="2" strokeDasharray="4 2" />
+      </svg>
+    ),
+    triangle: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <path d="M40,20 L60,20 Q65,40 75,80 L25,80 Q35,40 40,20" 
+              stroke={stroke} strokeWidth="3" fill={fill} strokeLinecap="round" />
+      </svg>
+    ),
+    rectangle: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+         <rect x="35" y="20" width="30" height="60" rx="5" 
+               stroke={stroke} strokeWidth="3" fill={fill} />
+      </svg>
+    ),
+    oval: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <ellipse cx="50" cy="50" rx="20" ry="30" 
+                 stroke={stroke} strokeWidth="3" fill={fill} />
+      </svg>
+    ),
+    heart: (
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <path d="M25,20 L75,20 Q70,45 60,80 L40,80 Q30,45 25,20" 
+              stroke={stroke} strokeWidth="3" fill={fill} strokeLinecap="round" />
+      </svg>
+    )
+  };
+  return shapes[type] || null;
 };
 
+// --- 2. UPDATED COMPONENT: 3D FLOAT WHEEL PICKER ---
+const WheelPicker = ({ min, max, value, onChange, unit = "" }) => {
+  const containerRef = useRef(null);
+  const itemHeight = 80; // Increased height for better spacing
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  // Generate range array
+  const range = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+
+  // Sync scroll on mount
+  useEffect(() => {
+    if (containerRef.current) {
+      const index = range.indexOf(value);
+      if (index !== -1) {
+        containerRef.current.scrollTop = index * itemHeight;
+        setActiveIndex(index);
+      }
+    }
+  }, []); 
+
+  const handleScroll = (e) => {
+    const scrollTop = e.target.scrollTop;
+    // Calculate which index is centered
+    const index = Math.round(scrollTop / itemHeight);
+    setActiveIndex(index);
+
+    const newValue = range[index];
+    if (newValue && newValue !== value) {
+      onChange(newValue);
+    }
+  };
+
+  return (
+    <div className="relative w-full h-[320px] flex justify-center items-center overflow-hidden">
+      
+      {/* The Magic Mask: 
+         This creates the "fade into nothing" effect at top and bottom 
+         without using solid color divs. The center is fully visible.
+      */}
+      <div 
+        style={{
+            maskImage: 'linear-gradient(to bottom, transparent 0%, black 40%, black 60%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 40%, black 60%, transparent 100%)'
+        }}
+        className="w-full h-full"
+      >
+          <div 
+            ref={containerRef}
+            onScroll={handleScroll}
+            className="w-full h-full overflow-y-auto no-scrollbar snap-y snap-mandatory py-[120px]" // Padding centers the first/last item
+            style={{ scrollBehavior: 'smooth' }}
+          >
+            {range.map((num, idx) => {
+              // Calculate distance from center to determine 3D effect
+              const distance = Math.abs(activeIndex - idx);
+              const isCenter = distance === 0;
+              const isNear = distance === 1;
+
+              return (
+                <div 
+                  key={num} 
+                  onClick={() => {
+                      if(containerRef.current) {
+                          containerRef.current.scrollTo({
+                              top: idx * itemHeight,
+                              behavior: 'smooth'
+                          });
+                      }
+                  }}
+                  className={`h-[80px] flex items-center justify-center snap-center transition-all duration-500 ease-out cursor-pointer origin-center`}
+                  style={{
+                      // 3D Transforms based on distance from center
+                      transform: isCenter ? 'scale(1.2)' : isNear ? 'scale(0.9)' : 'scale(0.7)',
+                      opacity: isCenter ? 1 : isNear ? 0.4 : 0.1,
+                      filter: isCenter ? 'blur(0px)' : 'blur(2px)',
+                  }}
+                >
+                  <div className="flex items-baseline gap-1">
+                      <span className={`font-bold tracking-tighter transition-colors duration-300 ${isCenter ? 'text-6xl text-[#00ff9d] drop-shadow-[0_0_15px_rgba(0,255,157,0.6)]' : 'text-5xl text-white'}`}>
+                        {num}
+                      </span>
+                      {isCenter && (
+                          <span className="text-sm font-bold text-[#00ff9d] uppercase tracking-widest mb-2 animate-pulse">
+                              {unit}
+                          </span>
+                      )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+      </div>
+    </div>
+  );
+};
 // Helper to format Height (Inches -> Ft' In")
 const formatHeight = (inches) => {
     const ft = Math.floor(inches / 12);
@@ -718,12 +824,10 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
   const [inputValue, setInputValue] = useState(""); 
   const [direction, setDirection] = useState(1);
   const [showResult, setShowResult] = useState(false);
-   const [sliderValue, setSliderValue] = useState(0);
-  
-  // New State for Multi-Select
+  const [pickerValue, setPickerValue] = useState(0);
   const [currentSelections, setCurrentSelections] = useState([]);
 
-  // --- FULL DATA ---
+  // --- STEPS CONFIGURATION ---
   const steps = [
     {
       question: `Hi ${userName}, I'm Siena.`,
@@ -733,104 +837,83 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
       type: 'selection'
     },
     {
-        question: "What do you do for work?",
-        subtext: "Select all industries that apply.",
-        options: [
-            "Architecture", "Art / Design", "Building / Maintenance", "Business", 
-            "Community / Social Service", "Education", "Entertainer", 
-            "Farming / Fishing", "Financial Services", "Health Practitioner", 
-            "Hospitality", "Management", "Media / Communications", "Tech / IT"
-        ],
-        key: 'work_industry',
-        type: 'scrollable_selection' 
+      question: "Where do you like to shop?",
+      subtext: "Select your favorite brands.",
+      options: [
+           "Zara", "H&M", "Nordstrom", "Banana Republic", "Madewell", 
+           "Anthropologie", "Lululemon", "J.Crew", "Gap", "Old Navy", 
+           "Target", "Amazon", "Macy's", "Shopbop", "Saks Fifth Avenue"
+       ],
+      key: 'brands',
+      type: 'scrollable_selection'
     },
     {
-        question: "Where do you like to shop?",
-        subtext: "Select your favorite brands.",
-        options: [
-            "Zara", "H&M", "Nordstrom", "Banana Republic", "Madewell", 
-            "Anthropologie", "Lululemon", "J.Crew", "Gap", "Old Navy", 
-            "Target", "Amazon", "Macy's", "Shopbop", "Saks Fifth Avenue"
-        ],
-        key: 'brands',
-        type: 'scrollable_selection'
-    },
-{
-        question: "What is your body shape?",
-        subtext: "Select the shape that best matches you.",
-        options: [
-            { id: 'hourglass', label: "Hourglass", desc: "Waist is narrowest part" },
-            { id: 'triangle', label: "Triangle", desc: "Hips broader than shoulders" },
-            { id: 'rectangle', label: "Rectangle", desc: "Hips, shoulders, waist equal" },
-            { id: 'oval', label: "Oval", desc: "Hips/shoulders narrower than waist" },
-            { id: 'heart', label: "Heart", desc: "Hips narrower than shoulders" }
-        ],
-        key: 'body_shape',
-        type: 'complex_selection' 
+      question: "What is your body shape?",
+      subtext: "Select the shape that best matches you.",
+      options: [
+        { id: 'hourglass', label: "Hourglass", desc: "Shoulders & hips balanced, defined waist" },
+        { id: 'triangle', label: "Triangle", desc: "Hips broader than shoulders" },
+        { id: 'rectangle', label: "Rectangle", desc: "Shoulders, waist & hips aligned" },
+        { id: 'oval', label: "Oval", desc: "Fuller midsection, undefined waist" },
+        { id: 'heart', label: "Heart", desc: "Shoulders broader than hips" }
+      ],
+      key: 'body_shape',
+      type: 'body_shape_special'
     },
     {
-        question: "What denim styles do you like?",
-        subtext: "Select your go-to fits.",
-        options: ["Skinny", "Straight", "Bootcut", "Wide-leg", "High-rise", "Mid-rise", "Low-rise"],
-        key: 'denim_style',
-        type: 'selection'
+      question: "What denim styles do you like?",
+      subtext: "Select your go-to fits.",
+      options: ["Skinny", "Straight", "Bootcut", "Wide-leg", "High-rise", "Mid-rise", "Low-rise"],
+      key: 'denim_style',
+      type: 'selection'
     },
     {
-        question: "Which colors do you want to avoid?",
-        subtext: "I will exclude these from your selection.",
-        options: [
-            { label: "Reds", color: "#ef4444" },
-            { label: "Pinks", color: "#ec4899" },
-            { label: "Oranges", color: "#f97316" },
-            { label: "Yellows", color: "#eab308" },
-            { label: "Greens", color: "#22c55e" },
-            { label: "Blues", color: "#3b82f6" },
-            { label: "Purples", color: "#a855f7" },
-            { label: "Browns", color: "#78350f" },
-            { label: "Beiges", color: "#d6d3d1" },
-            { label: "Grays", color: "#6b7280" },
-            { label: "Whites", color: "#ffffff" },
-            { label: "Blacks", color: "#000000" }
-        ],
-        key: 'avoid_colors',
-        type: 'color_selection'
+       question: "Which colors do you want to avoid?",
+       subtext: "I will exclude these from your selection.",
+       options: [
+           { label: "Reds", color: "#ef4444" },
+           { label: "Pinks", color: "#ec4899" },
+           { label: "Oranges", color: "#f97316" },
+           { label: "Yellows", color: "#eab308" },
+           { label: "Greens", color: "#22c55e" },
+           { label: "Blues", color: "#3b82f6" },
+           { label: "Purples", color: "#a855f7" },
+           { label: "Browns", color: "#78350f" },
+           { label: "Beiges", color: "#d6d3d1" },
+           { label: "Grays", color: "#6b7280" },
+           { label: "Whites", color: "#ffffff" },
+           { label: "Blacks", color: "#000000" }
+       ],
+       key: 'avoid_colors',
+       type: 'color_selection'
     },
     {
-        question: "Do you want to avoid any of these?",
-        subtext: "Select items you never wear.",
-        options: ["Dresses", "Jackets", "Skirts", "Pants", "Shorts", "Jeans", "Shoes", "Bags", "Blazers", "Jewelry"],
-        key: 'avoid_items',
-        type: 'selection'
+       question: "Do you want to avoid any of these?",
+       subtext: "Select items you never wear.",
+       options: ["Dresses", "Jackets", "Skirts", "Pants", "Shorts", "Jeans", "Shoes", "Bags", "Blazers", "Jewelry"],
+       key: 'avoid_items',
+       type: 'selection'
     },
     {
-        question: "How do sleeves tend to fit?",
-        subtext: "Help me nail the shirt fit.",
-        options: ["Too Short", "Just Right", "Too Long"],
-        key: 'fit_sleeves',
-        type: 'selection'
-    },
-  // ... previous steps ...
-    {
-        question: "How tall are you?",
-        subtext: "Drag to adjust.",
-        key: 'height',
-        type: 'slider',
-        min: 48,  // 4' 0"
-        max: 84,  // 7' 0"
-        defaultValue: 66, // Starts at 5' 6" (Average)
-        format: formatHeight
+       question: "How tall are you?",
+       subtext: "Scroll to select.",
+       key: 'height',
+       type: 'picker',
+       min: 140, // cm
+       max: 220, // cm
+       defaultValue: 165,
+       unit: "cm" 
     },
     {
-        question: "What is your weight?",
-        subtext: "Drag to adjust.",
-        key: 'weight',
-        type: 'slider',
-        min: 80,
-        max: 300,
-        defaultValue: 150, // Starts at 150 lbs (Common)
-        format: formatWeight
+       question: "What is your weight?",
+       subtext: "Scroll to select.",
+       key: 'weight',
+       type: 'picker',
+       min: 40, // kgs
+       max: 150, // kgs
+       defaultValue: 65,
+       unit: "kg" 
     },
-    // ... budget step ...
     {
       question: "What is your budget?",
       subtext: "Select all ranges that apply.",
@@ -841,50 +924,41 @@ const AIStylistQuiz = ({ userName = "Rohan", onComplete }) => {
   ];
 
   // Reset selections when step changes
- // Reset selections/values when step changes
   useEffect(() => {
     setCurrentSelections([]);
     setInputValue("");
-    
-    // Set default value if it's a slider step
-    if (steps[step].type === 'slider') {
-        setSliderValue(steps[step].defaultValue);
+    if (steps[step].type === 'picker') {
+        setPickerValue(steps[step].defaultValue);
     }
   }, [step]);
 
-  // NEW: Handle Toggle Logic (Add/Remove from array)
   const handleOptionToggle = (option) => {
     const value = typeof option === 'object' ? option.label : option;
-    
     setCurrentSelections(prev => {
       if (prev.includes(value)) {
-        return prev.filter(item => item !== value); // Remove if exists
+        return prev.filter(item => item !== value); 
       } else {
-        return [...prev, value]; // Add if doesn't exist
+        return [...prev, value]; 
       }
     });
   };
 
-  // NEW: Handle "Next" Button Click
-const handleNextStep = () => {
+  const handleNextStep = () => {
     const currentStepData = steps[step];
     const currentKey = currentStepData.key;
     
-    // Determine the final value based on type
     let finalValue;
     if (currentStepData.type === 'input') {
         finalValue = inputValue;
-    } else if (currentStepData.type === 'slider') {
-        finalValue = currentStepData.format(sliderValue); // Save formatted string (e.g. "5' 9\"")
+    } else if (currentStepData.type === 'picker') {
+        finalValue = pickerValue; 
     } else {
         finalValue = currentSelections;
     }
 
-    // Save
     setAnswers(prev => ({...prev, [currentKey]: finalValue}));
     setDirection(1);
     
-    // Navigate
     if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
@@ -893,7 +967,6 @@ const handleNextStep = () => {
     }
   };
 
-  // Animation Variants
   const containerVariants = {
     hidden: { opacity: 0, x: 20 },
     show: { opacity: 1, x: 0, transition: { staggerChildren: 0.05 } },
@@ -905,28 +978,23 @@ const handleNextStep = () => {
     show: { opacity: 1, y: 0 }
   };
 
-  if (showResult) {
-    return <ResultScreen userName={userName} />;
-  }
-
   const currentStepData = steps[step];
   const progress = ((step + 1) / steps.length) * 100;
   
-  // Check if we can proceed (Input needs text, Selection needs at least 1 item)
-// Allow proceed if it's a slider (since it always has a value)
   const canProceed = currentStepData.type === 'input' 
     ? inputValue.trim().length > 0 
-    : currentStepData.type === 'slider' 
+    : currentStepData.type === 'picker' 
         ? true 
         : currentSelections.length > 0;
+
   return (
     <div className="w-full h-full relative bg-[#121212] overflow-hidden font-inter text-white">
       
       {/* --- BACKGROUND --- */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <img src={IMAGES.stylistBg} alt="Bg" className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale-[30%] scale-105" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-[#121212]"></div>
-        <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-[#121212] z-10"></div>
+        <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-10"></div>
+        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=2864&auto=format&fit=crop" alt="Bg" className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale-[30%] scale-105" />
       </div>
 
       {/* --- HEADER --- */}
@@ -962,7 +1030,7 @@ const handleNextStep = () => {
                 initial="hidden"
                 animate="show"
                 exit="exit"
-                className="flex flex-col items-center text-center w-full max-w-md mx-auto"
+                className="flex flex-col items-center text-center w-full max-w-md mx-auto h-full"
             >
                 {/* Step Indicator */}
                 <motion.span variants={itemVariants} className="text-[10px] font-bold text-[#00ff9d] tracking-widest uppercase mb-4 border border-[#00ff9d]/30 px-3 py-1 rounded-full backdrop-blur-md">
@@ -979,46 +1047,60 @@ const handleNextStep = () => {
 
                 {/* --- RENDERERS --- */}
                 
-                {/* 1. INPUT RENDERER */}
-               {/* 5. SLIDER RENDERER (Height/Weight) */}
-{currentStepData.type === 'slider' && (
-    <motion.div variants={itemVariants} className="w-full flex flex-col items-center gap-10 py-4">
-        
-        {/* Large Display Value */}
-        <div className="relative">
-            <span className="text-6xl font-bold text-white tracking-tighter drop-shadow-[0_0_15px_rgba(0,255,157,0.5)]">
-                {currentStepData.format(sliderValue)}
-            </span>
-            {/* Decorative underline */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-[#00ff9d] rounded-full" />
-        </div>
+                {/* 1. PICKER RENDERER (Updated 3D) */}
+                {currentStepData.type === 'picker' && (
+                    <motion.div variants={itemVariants} className="w-full">
+                        <WheelPicker 
+                            min={currentStepData.min}
+                            max={currentStepData.max}
+                            value={pickerValue}
+                            onChange={setPickerValue}
+                            unit={currentStepData.unit}
+                        />
+                    </motion.div>
+                )}
 
-        {/* The Slider Control */}
-        <div className="w-full px-4 relative">
-            {/* Custom Range Input */}
-            <input
-                type="range"
-                min={currentStepData.min}
-                max={currentStepData.max}
-                value={sliderValue}
-                onChange={(e) => setSliderValue(Number(e.target.value))}
-                className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#00ff9d] focus:outline-none focus:ring-2 focus:ring-[#00ff9d]/50"
-                style={{
-                    // Gradient track logic to fill up to the thumb
-                    backgroundImage: `linear-gradient(to right, #00ff9d 0%, #00ff9d ${((sliderValue - currentStepData.min) / (currentStepData.max - currentStepData.min)) * 100}%, rgba(255,255,255,0.1) ${((sliderValue - currentStepData.min) / (currentStepData.max - currentStepData.min)) * 100}%, rgba(255,255,255,0.1) 100%)`
-                }}
-            />
-            
-            {/* Min/Max Labels */}
-            <div className="flex justify-between text-xs text-white/40 mt-4 font-medium tracking-widest uppercase">
-                <span>{currentStepData.format(currentStepData.min)}</span>
-                <span>{currentStepData.format(currentStepData.max)}</span>
-            </div>
-        </div>
-    </motion.div>
-)}
+                {/* 2. BODY SHAPE SPECIAL RENDERER */}
+                {currentStepData.type === 'body_shape_special' && (
+                    <motion.div variants={itemVariants} className="w-full grid grid-cols-2 gap-4 pb-10">
+                         {currentStepData.options.map((opt, idx) => {
+                             const isSelected = currentSelections.includes(opt.label);
+                             
+                             return (
+                                 <motion.button 
+                                     key={idx}
+                                     whileTap={{ scale: 0.95 }}
+                                     onClick={() => handleOptionToggle(opt)}
+                                     className={`relative group overflow-hidden rounded-[24px] p-4 flex flex-col items-center gap-3 transition-all duration-300 border ${
+                                         isSelected 
+                                         ? "bg-[#00ff9d]/10 border-[#00ff9d] shadow-[0_0_30px_rgba(0,255,157,0.2)]" 
+                                         : "bg-white/5 border-white/10 hover:bg-white/10"
+                                     } ${currentStepData.options.length % 2 !== 0 && idx === currentStepData.options.length - 1 ? 'col-span-2' : ''}`}
+                                 >
+                                     {isSelected && <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,157,0.15),transparent)]" />}
+                                     <div className="w-16 h-16 md:w-20 md:h-20 relative z-10 transition-transform duration-300 group-hover:scale-110">
+                                         <BodyShapeIcons type={opt.id} color={isSelected ? "#00ff9d" : "#ffffff"} />
+                                     </div>
+                                     <div className="flex flex-col gap-1 z-10">
+                                         <span className={`text-sm font-bold uppercase tracking-wider ${isSelected ? "text-[#00ff9d]" : "text-white"}`}>
+                                             {opt.label}
+                                         </span>
+                                         <span className="text-[10px] text-white/50 font-medium leading-tight px-2">
+                                             {opt.desc}
+                                         </span>
+                                     </div>
+                                     {isSelected && (
+                                         <div className="absolute top-3 right-3 w-5 h-5 bg-[#00ff9d] rounded-full flex items-center justify-center shadow-lg">
+                                             <Check size={12} className="text-black stroke-[3]" />
+                                         </div>
+                                     )}
+                                 </motion.button>
+                             )
+                         })}
+                    </motion.div>
+                )}
 
-                {/* 2. COLOR GRID RENDERER (MULTI SELECT) */}
+                {/* 3. COLOR GRID RENDERER */}
                 {currentStepData.type === 'color_selection' && (
                     <motion.div variants={itemVariants} className="w-full grid grid-cols-3 gap-3">
                         {currentStepData.options.map((opt, idx) => {
@@ -1051,7 +1133,7 @@ const handleNextStep = () => {
                     </motion.div>
                 )}
 
-                {/* 3. SCROLLABLE LIST RENDERER (MULTI SELECT) */}
+                {/* 4. SCROLLABLE LIST RENDERER */}
                 {currentStepData.type === 'scrollable_selection' && (
                     <motion.div variants={itemVariants} className="w-full h-[300px] overflow-y-auto pr-2 grid grid-cols-1 gap-3 custom-scrollbar">
                         {currentStepData.options.map((opt, idx) => {
@@ -1078,49 +1160,33 @@ const handleNextStep = () => {
                     </motion.div>
                 )}
 
-                {/* 4. STANDARD/COMPLEX GRID RENDERER (MULTI SELECT) */}
-              {/* 4. STANDARD/COMPLEX GRID RENDERER (Updated with Icons) */}
-{(currentStepData.type === 'selection' || currentStepData.type === 'complex_selection') && (
-    <motion.div variants={itemVariants} className={`w-full grid gap-3 ${currentStepData.type === 'complex_selection' ? 'grid-cols-1' : 'grid-cols-2'}`}>
-        {currentStepData.options.map((opt, idx) => {
-            const isComplex = typeof opt === 'object';
-            const value = isComplex ? opt.label : opt;
-            const isSelected = currentSelections.includes(value);
+                {/* 5. STANDARD SELECTION */}
+                {currentStepData.type === 'selection' && (
+                     <motion.div variants={itemVariants} className="w-full grid grid-cols-2 gap-3">
+                        {currentStepData.options.map((opt, idx) => {
+                            const isSelected = currentSelections.includes(opt);
+                            return (
+                                <motion.button 
+                                    key={idx}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => handleOptionToggle(opt)}
+                                    className={`relative group backdrop-blur-xl border py-4 px-5 rounded-[20px] text-left transition-all duration-300 overflow-hidden flex items-center gap-5 ${
+                                        isSelected 
+                                        ? "bg-[#00ff9d]/10 border-[#00ff9d] shadow-[0_0_15px_rgba(0,255,157,0.15)]" 
+                                        : "bg-white/5 border-white/10 text-white"
+                                    }`}
+                                >
+                                    <span className={`font-medium tracking-wider text-xs md:text-sm uppercase ${isSelected ? "text-[#00ff9d]" : "text-white"}`}>
+                                        {opt}
+                                    </span>
+                                    {isSelected && <div className="absolute inset-0 bg-[#00ff9d]/5" />}
+                                </motion.button>
+                            );
+                        })}
+                     </motion.div>
+                )}
 
-            return (
-                <motion.button 
-                    key={idx}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleOptionToggle(opt)}
-                    className={`relative group backdrop-blur-xl border py-4 px-5 rounded-[20px] text-left transition-all duration-300 overflow-hidden flex items-center gap-5 ${
-                        isSelected 
-                        ? "bg-[#00ff9d]/10 border-[#00ff9d] shadow-[0_0_15px_rgba(0,255,157,0.15)]" 
-                        : "bg-white/5 border-white/10 text-white"
-                    }`}
-                >
-                    {/* ICON RENDERER (Only if ID exists) */}
-                    {isComplex && opt.id && BODY_ICONS[opt.id] && (
-                        <div className={`shrink-0 transition-colors duration-300 ${isSelected ? "text-[#00ff9d]" : "text-white/60 group-hover:text-white"}`}>
-                            {/* We pass the color explicitly based on selection state */}
-                            {BODY_ICONS[opt.id](isSelected ? "#00ff9d" : "currentColor")}
-                        </div>
-                    )}
-
-                    <div className="relative z-10 flex flex-col items-start w-full">
-                        <span className={`font-medium tracking-wider uppercase ${isComplex ? 'text-sm' : 'text-xs md:text-sm'} ${isSelected ? "text-[#00ff9d]" : "text-white"}`}>
-                            {isComplex ? opt.label : opt}
-                        </span>
-                        {isComplex && <span className="text-xs text-gray-400 capitalize mt-1">{opt.desc}</span>}
-                    </div>
-
-                    {/* Selection Glow */}
-                    {isSelected && <div className="absolute inset-0 bg-[#00ff9d]/5" />}
-                </motion.button>
-            );
-        })}
-    </motion.div>
-)}
             </motion.div>
         </AnimatePresence>
       </div>
@@ -1145,51 +1211,9 @@ const handleNextStep = () => {
       </AnimatePresence>
 
       {/* --- BOTTOM SOUL UI --- */}
-      <div className="absolute bottom-6 left-0 w-full flex justify-center z-30">
-            <div className="relative w-16 h-16 flex items-center justify-center">
-                 <motion.div 
-                    animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }} 
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(90,0,224,0.4)_0%,transparent_70%)]"
-                 />
-                 <button className="relative z-10 w-12 h-12 bg-gradient-to-br from-[#1a1a1a] to-black border border-white/10 rounded-full flex items-center justify-center shadow-[0_10px_30px_-10px_rgba(90,0,224,0.6)] active:scale-90 transition-transform group">
-                    <Mic size={20} className="text-white/90 group-hover:text-[#00ff9d] transition-colors duration-300" />
-                 </button>
-            </div>
-      </div>
+     
     </div>
   );
-  <style>{`
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    height: 28px;
-    width: 28px;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 4px solid #00ff9d;
-    box-shadow: 0 0 20px rgba(0, 255, 157, 0.6);
-    cursor: pointer;
-    margin-top: -10px; /* Adjusts thumb position relative to track */
-  }
-  input[type=range]::-moz-range-thumb {
-    height: 28px;
-    width: 28px;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 4px solid #00ff9d;
-    box-shadow: 0 0 20px rgba(0, 255, 157, 0.6);
-    cursor: pointer;
-    border: none;
-  }
-  /* Remove default track styles so our gradient works */
-  input[type=range]::-webkit-slider-runnable-track {
-    width: 100%;
-    height: 8px;
-    cursor: pointer;
-    background: transparent; 
-    border-radius: 999px;
-  }
-`}</style>
 };
 
 // --- NEW RESULT COMPONENT (Based on "Rustic Casual" screenshot) ---
