@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 // Find this line at the top and update it:
-import { ArrowRight, Camera, Mic, Bell, Heart, Check, ShoppingBag, Square, Search, ChevronLeft, Share2, X, Mail, Lock, Eye, EyeOff, Upload, Sparkles, User as UserIcon } from 'lucide-react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { ArrowRight, Camera, Mic, Bell, Heart, Check, ShoppingBag, Square, Search, ChevronLeft, Share2, X, Mail, Lock, Eye, EyeOff, Upload, Sparkles, Layers, ArrowUpRight, Plus,Shirt, User as UserIcon } from 'lucide-react';
+import { motion, AnimatePresence, useInView, useMotionValue, useSpring, useTransform  } from "framer-motion";
 
 
 
@@ -21,18 +21,56 @@ const IMAGES = {
   stylistBg: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1200&auto=format&fit=crop", 
   // For the new Home Feed:
   feed: [
-    { id: 1, src: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80", outfit: 'Casual Chic Ensemble', price: 249, topPrice: 120, bottomPrice: 129, link: "https://example.com/outfit1" },
-    { id: 2, src: "https://images.unsplash.com/photo-1529139574466-a302c27e3844?w=800&q=80", outfit: 'Elegant Evening Wear', price: 499, topPrice: 250, bottomPrice: 249, link: "https://example.com/outfit2" },
-    { id: 3, src: "https://images.unsplash.com/photo-1507680434567-5739c8a92437?w=800&q=80", outfit: 'Power Suit Look', price: 380, topPrice: 190, bottomPrice: 190, link: "https://example.com/outfit3" },
-    { id: 4, src: "https://images.unsplash.com/photo-1550614000-4b9519e02d48?w=800&q=80", outfit: 'Urban Street Style', price: 180, topPrice: 90, bottomPrice: 90, link: "https://example.com/outfit4" },
-    { id: 5, src: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80", outfit: 'Boho Summer Vibes', price: 210, topPrice: 100, bottomPrice: 110, link: "https://example.com/outfit5" },
-    { id: 6, src: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&q=80", outfit: 'Classic Denim Day', price: 150, topPrice: 70, bottomPrice: 80, link: "https://example.com/outfit6" },
-    { id: 7, src: "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800&auto=format&fit=crop", outfit: 'Layered Autumn Look', price: 320, topPrice: 150, bottomPrice: 170, link: "https://example.com/outfit7" },
-    { id: 8, src: "https://images.unsplash.com/photo-1532456073110-86d1b110b503?q=80&w=800&auto=format&fit=crop", outfit: 'Sporty Casual', price: 130, topPrice: 60, bottomPrice: 70, link: "https://example.com/outfit8" },
+    { id: 1, src: "/nydp8w9r6dofmfqpykso.avif", outfit: 'Casual Chic Ensemble', price: 249, topPrice: 120, bottomPrice: 129, link: "https://example.com/outfit1" },
+    { id: 2, src: "/stm7ebkejuqgrk88jwyp.avif", outfit: 'Elegant Evening Wear', price: 499, topPrice: 250, bottomPrice: 249, link: "https://example.com/outfit2" },
+    { id: 3, src: "/to6adxfkrspltytgo4rf.avif", outfit: 'Power Suit Look', price: 380, topPrice: 190, bottomPrice: 190, link: "https://example.com/outfit3" },
+    { id: 4, src: "to6adxfkrspltytgo4rf.avif", outfit: 'Urban Street Style', price: 180, topPrice: 90, bottomPrice: 90, link: "https://example.com/outfit4" },
+    { id: 5, src: "/v1fttakwgpjz1ttefruq.webp", outfit: 'Boho Summer Vibes', price: 210, topPrice: 100, bottomPrice: 110, link: "https://example.com/outfit5" },
+    { id: 6, src: "/stm7ebkejuqgrk88jwyp.avif", outfit: 'Classic Denim Day', price: 150, topPrice: 70, bottomPrice: 80, link: "https://example.com/outfit6" },
+    { id: 7, src: "/v1fttakwgpjz1ttefruq.webp", outfit: 'Layered Autumn Look', price: 320, topPrice: 150, bottomPrice: 170, link: "https://example.com/outfit7" },
+    { id: 8, src: "/v1fttakwgpjz1ttefruq.webp", outfit: 'Sporty Casual', price: 130, topPrice: 60, bottomPrice: 70, link: "https://example.com/outfit8" },
   ],
   tryOnModel: "/download.jpg", 
   tryOnClothes: "/download.jpg", 
 };
+
+const OUTFITS = [
+  {
+    id: 101,
+    title: "Urban Minimalist",
+    description: "Effortless styling for the modern creative.",
+    mainImage: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop", // Full body shot
+    totalPrice: 245,
+    pieces: [
+      { id: 'p1', name: "Oversized Linen Blazer", price: 120, type: 'top', image: "/nydp8w9r6dofmfqpykso.avif" },
+      { id: 'p2', name: "Pleated Wide Leg Trousers", price: 85, type: 'bottom', image: "/stm7ebkejuqgrk88jwyp.avif" },
+      
+    ]
+  },
+  {
+    id: 102,
+    title: "Dark Academia",
+    description: "Classic textures meeting modern silhouettes.",
+    mainImage: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1000&auto=format&fit=crop",
+    totalPrice: 180,
+    pieces: [
+      { id: 'p4', name: "Wool Knit Turtleneck", price: 60, type: 'top', image: "/to6adxfkrspltytgo4rf.avif" },
+      { id: 'p5', name: "Plaid Midi Skirt", price: 55, type: 'bottom', image: "/try.webp" }
+    ]
+  },
+  {
+    id: 101,
+    title: "Urban Minimalist",
+    description: "Effortless styling for the modern creative.",
+    mainImage: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop", // Full body shot
+    totalPrice: 245,
+    pieces: [
+      { id: 'p1', name: "Oversized Linen Blazer", price: 120, type: 'top', image: "/v1fttakwgpjz1ttefruq.webp" },
+      { id: 'p2', name: "Pleated Wide Leg Trousers", price: 85, type: 'bottom', image: "/try.webp" },
+      
+    ]
+  }
+];
 
 
 // SVG Path definitions for Body Shapes
@@ -1314,10 +1352,148 @@ const Analyzing = ({ onComplete }) => {
     );
 };
 
+
+const OutfitCard = ({ outfit, mixSelection, onToggleMix, onTryOn, addToCart }) => {
+  const [activePiece, setActivePiece] = useState(outfit.pieces[0]);
+  const cardRef = useRef(null);
+  const isInView = useInView(cardRef, { once: true, margin: "-100px" });
+
+  // 3D Tilt Effect
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
+  const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
+
+  function handleMouseMove({ currentTarget, clientX, clientY }) {
+    const { left, top, width, height } = currentTarget.getBoundingClientRect();
+    x.set((clientX - left) / width - 0.5);
+    y.set((clientY - top) / height - 0.5);
+  }
+
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], [3, -3]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-3, 3]);
+
+  // Check if current active piece is in the global mix
+  const isSelected = mixSelection[activePiece.type]?.id === activePiece.id;
+
+  return (
+    <motion.div
+      ref={cardRef}
+      initial={{ opacity: 0, y: 50, scale: 0.95 }}
+      animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => { x.set(0); y.set(0); }}
+      style={{ rotateX, rotateY, perspective: 1000 }}
+      className="relative w-full mb-10 h-[520px] rounded-[36px] shadow-2xl overflow-hidden group cursor-pointer bg-white"
+    >
+      {/* 1. Main Image */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activePiece.image}
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+          exit={{ opacity: 0, scale: 1.05, filter: "blur(4px)" }}
+          transition={{ duration: 0.5 }}
+          className="absolute inset-0"
+        >
+          <img src={activePiece.image} alt={activePiece.name} className="w-full h-full object-cover" />
+        </motion.div>
+      </AnimatePresence>
+
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10 pointer-events-none" />
+
+      {/* 2. Floating Dock */}
+      <div className="absolute bottom-0 left-0 w-full p-5 z-30 flex justify-center">
+        <motion.div
+          className="bg-white/10 backdrop-blur-xl border border-white/30 p-3 shadow-2xl rounded-[28px] max-w-[95%] w-full flex flex-col gap-3 relative overflow-hidden"
+        >
+          {/* Piece Selectors */}
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar z-10">
+            {outfit.pieces.map((piece) => {
+               const isPieceInMix = mixSelection[piece.type]?.id === piece.id;
+               
+               return (
+                <button
+                    key={piece.id}
+                    onClick={(e) => { e.stopPropagation(); setActivePiece(piece); }}
+                    className={`relative flex-shrink-0 w-11 h-11 rounded-full overflow-hidden border-2 transition-all duration-300
+                    ${activePiece.id === piece.id ? 'border-white scale-110 shadow-lg' : 'border-white/30 opacity-70'}
+                    `}
+                >
+                    <img src={piece.image} alt={piece.name} className="w-full h-full object-cover" />
+                    
+                    {/* The "Magic" Layout ID for flying animation */}
+                    {isPieceInMix && (
+                        <motion.div 
+                            layoutId={`img-${piece.id}`} 
+                            className="absolute inset-0 bg-green-500/20 z-20"
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }} 
+                        />
+                    )}
+                </button>
+            )})}
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center justify-between pt-2 border-t border-white/20 z-10">
+            <div className="flex flex-col text-white">
+              <span className="text-[10px] uppercase font-bold opacity-70">{activePiece.type}</span>
+              <span className="text-sm font-bold truncate w-24">{activePiece.name}</span>
+            </div>
+
+            {/* ACTION BUTTONS GROUP */}
+            <div className="flex gap-2">
+                
+                {/* 1. INDIVIDUAL TRY ON (Restored) */}
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => { e.stopPropagation(); onTryOn(activePiece); }}
+                  className="flex items-center gap-1.5 bg-white text-black px-3 py-2 rounded-full shadow-lg"
+                >
+                  <Layers size={12} />
+                  <span className="text-[9px] font-bold uppercase tracking-wider">Try On</span>
+                </motion.button>
+
+                {/* 2. BUY/LINK (Restored) */}
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`/product/${activePiece.id}`, '_blank');
+                    addToCart(activePiece);
+                  }}
+                  className="w-8 h-8 flex items-center justify-center bg-black/40 text-white border border-white/20 rounded-full hover:bg-black/60 transition-colors"
+                >
+                  <ArrowUpRight size={14} />
+                </motion.button>
+
+                {/* 3. ADD TO MIX (New Feature) */}
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => { e.stopPropagation(); onToggleMix(activePiece); }}
+                  className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors border
+                    ${isSelected 
+                        ? 'bg-green-500 text-white border-green-400' 
+                        : 'bg-[#5a00e0] text-white border-[#5a00e0]'}
+                  `}
+                >
+                  {isSelected ? <Check size={14} /> : <Plus size={14} />}
+                </motion.button>
+
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+};
+
 // --- NEW COMPONENT: ULTRA MODERN NAVBAR ---
 // --- 5. NAVBAR (Your Previous Code - Restored) ---
-const UltraModernNavbar = ({ cartCount, onCheckout }) => {
+const UltraModernNavbar = ({ mixSelection, clearMix, onTryOnMix, cartCount, onCheckout }) => {
   const [activeTab, setActiveTab] = useState("home");
+  const isMixMode = mixSelection.top || mixSelection.bottom;
 
   const navItems = [
     { id: "home", icon: Square, label: "Feed" },
@@ -1327,84 +1503,152 @@ const UltraModernNavbar = ({ cartCount, onCheckout }) => {
   ];
 
   return (
-    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-[350px]">
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full flex justify-center px-4">
       {/* Floating Dock Container */}
       <motion.div
+        layout
         initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 20, stiffness: 100, delay: 0.5 }}
-        className="relative w-full h-[70px] rounded-[32px] p-1.5"
+        animate={{ 
+            y: 0, 
+            opacity: 1,
+            width: isMixMode ? "360px" : "350px", // Slight expansion for mix mode
+            height: "70px",
+            borderRadius: "32px"
+        }}
+        transition={{ type: "spring", damping: 20, stiffness: 100, delay: 0.2 }}
+        className="relative overflow-hidden"
       >
         {/* Glass Background with Gradient Border */}
-        <div className="absolute inset-0 rounded-[32px] bg-black/80 backdrop-blur-2xl border border-white/10 shadow-2xl overflow-hidden">
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-2xl border border-white/10 shadow-2xl">
            {/* Ambient Blue Glow inside the glass */}
            <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-[#5a00e0]/40 blur-[40px] rounded-full" />
         </div>
 
-        {/* Navigation Items */}
-        <div className="relative z-10 w-full h-full flex items-center justify-between px-4">
-          
-          {/* LOGO (Animated) */}
-          <motion.div 
-            className="pl-2 pr-4 flex flex-col justify-center"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <h1 className="font-serif text-xl font-black text-white tracking-widest drop-shadow-md">
-            TryOn
-            </h1>
-          </motion.div>
+        {/* Content Area */}
+        <div className="relative z-10 w-full h-full">
+            <AnimatePresence mode="popLayout" initial={false}>
+                {!isMixMode ? (
+                    /* --- VIEW 1: STANDARD NAV --- */
+                    <motion.div 
+                        key="nav"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="w-full h-full flex items-center justify-between px-4"
+                    >
+                        {/* LOGO (Animated) */}
+                        <motion.div 
+                            className="pl-2 pr-4 flex flex-col justify-center"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <h1 className="font-serif text-xl font-black text-white tracking-widest drop-shadow-md">
+                            TryOn
+                            </h1>
+                        </motion.div>
 
-          {/* Icons Row */}
-          <div className="flex items-center gap-1">
-            {navItems.map((item) => {
-              const isActive = activeTab === item.id;
+                        {/* Icons Row */}
+                        <div className="flex items-center gap-1">
+                            {navItems.map((item) => {
+                                const isActive = activeTab === item.id;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => {
+                                            setActiveTab(item.id);
+                                            if (item.id === "cart" && onCheckout) onCheckout();
+                                        }}
+                                        className="relative w-11 h-11 flex items-center justify-center rounded-full group outline-none"
+                                    >
+                                        {/* THE LIQUID PILL (Layout Animation) */}
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="active-pill"
+                                                className="absolute inset-0 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                            />
+                                        )}
 
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    if (item.id === "cart" && onCheckout) onCheckout();
-                  }}
-                  className="relative w-11 h-11 flex items-center justify-center rounded-full group outline-none"
-                >
-                  {/* THE LIQUID PILL (Layout Animation) */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="active-pill"
-                      className="absolute inset-0 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)]"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
+                                        {/* Icon Layer */}
+                                        <motion.div
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.8 }}
+                                            className="relative z-10"
+                                        >
+                                            <item.icon
+                                                size={20}
+                                                strokeWidth={2.5}
+                                                className={`transition-colors duration-300 ${isActive ? "text-black" : "text-white/60 group-hover:text-white"}`}
+                                            />
+                                            {item.isCart && cartCount > 0 && (
+                                                <motion.span
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    className={`absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center text-[9px] font-bold rounded-full border ${isActive ? "bg-black text-white border-transparent" : "bg-[#5a00e0] text-white border-[#2a2a2a]"}`}
+                                                >
+                                                    {cartCount}
+                                                </motion.span>
+                                            )}
+                                        </motion.div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </motion.div>
+                ) : (
+                    /* --- VIEW 2: MIX MODE DOCK --- */
+                    <motion.div 
+                        key="mix"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="w-full h-full flex items-center justify-between px-6"
+                    >
+                         {/* Selected Pieces Preview (Destination for flying animations) */}
+                        <div className="flex items-center">
+                            {['top', 'bottom'].map((type) => (
+                                <div key={type} className="relative w-11 h-11 rounded-full border-2 border-white/10 bg-white/5 overflow-hidden -ml-3 first:ml-0 shadow-lg ring-1 ring-black/40">
+                                    {mixSelection[type] ? (
+                                        <motion.img 
+                                            layoutId={`img-${mixSelection[type].id}`} 
+                                            src={mixSelection[type].image} 
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-white/20">
+                                            <Shirt size={16} />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
 
-                  {/* Icon Layer */}
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.8 }}
-                    className="relative z-10"
-                  >
-                    <item.icon
-                      size={20}
-                      strokeWidth={2.5}
-                      className={`transition-colors duration-300 ${isActive ? "text-black" : "text-white/60 group-hover:text-white"}`}
-                    />
-
-                    {/* Cart Badge with Pop Animation */}
-                    {item.isCart && cartCount > 0 && (
-                      <motion.span
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className={`absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center text-[9px] font-bold rounded-full border ${isActive ? "bg-black text-white border-transparent" : "bg-[#5a00e0] text-white border-[#2a2a2a]"}`}
-                      >
-                        {cartCount}
-                      </motion.span>
-                    )}
-                  </motion.div>
-                </button>
-              );
-            })}
-          </div>
+                         {/* Action Buttons */}
+                        <div className="flex items-center gap-2">
+                             <button 
+                                onClick={clearMix}
+                                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 transition-colors"
+                             >
+                                <X size={20} />
+                             </button>
+                             <motion.button
+                                layout
+                                onClick={onTryOnMix}
+                                whileTap={{ scale: 0.95 }}
+                                disabled={!mixSelection.top && !mixSelection.bottom}
+                                className={`h-10 px-5 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-2 shadow-lg transition-all
+                                    ${(mixSelection.top || mixSelection.bottom) 
+                                        ? 'bg-[#5a00e0] text-white shadow-[#5a00e0]/40' 
+                                        : 'bg-white/10 text-white/30 cursor-not-allowed'}
+                                `}
+                             >
+                                <span>Try On</span>
+                                <Sparkles size={14} />
+                             </motion.button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
       </motion.div>
     </div>
@@ -1412,37 +1656,42 @@ const UltraModernNavbar = ({ cartCount, onCheckout }) => {
 };
 
 // --- 6. UPDATED HOME FEED (Aazmaao Zen) ---
-const HomeFeed = ({ onTryOn, addToCart, cartCount, onCheckout }) => {
+const HomeFeed = ({ onTryOn, addToCart, cartCount = 2, onCheckout }) => {
+  // Global State for the "Mix"
+  // This allows selecting a Top from Card A and a Bottom from Card B
+  const [mixSelection, setMixSelection] = useState({ top: null, bottom: null });
+
+  const togglePiece = (piece) => {
+     setMixSelection(prev => {
+         // If clicking same piece, remove it
+         if (prev[piece.type]?.id === piece.id) {
+             return { ...prev, [piece.type]: null };
+         }
+         // Otherwise, replace/add for that category (top/bottom)
+         return { ...prev, [piece.type]: piece };
+     });
+  };
+
+  const clearMix = () => setMixSelection({ top: null, bottom: null });
+
   return (
-    <motion.div 
-      variants={pageVariants} initial="initial" animate="animate" exit="exit"
-      className="w-full h-full relative flex flex-col bg-[#f2f4f8]"
-    >
-      {/* --- 1. PARTICLE BACKGROUND (Subtle Physics) --- */}
-      <div className="absolute inset-0 z-0 opacity-30 pointer-events-none overflow-hidden">
+    <div className="w-full h-full relative flex flex-col bg-[#f2f4f8] overflow-hidden font-sans">
+      
+      {/* Background Particles */}
+      <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
          {Array.from({ length: 15 }).map((_, i) => (
              <motion.div
                 key={i}
-                initial={{ 
-                    x: Math.random() * 400, 
-                    y: Math.random() * 800,
-                    opacity: 0
-                }}
-                animate={{ 
-                    y: [null, Math.random() * -50],
-                    opacity: [0, 0.5, 0],
-                }}
-                transition={{ 
-                    duration: Math.random() * 10 + 10, 
-                    repeat: Infinity, 
-                    ease: "linear",
-                    delay: Math.random() * 5
-                }}
+                initial={{ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight }}
+                animate={{ y: [null, Math.random() * -100], opacity: [0, 0.5, 0] }}
+                transition={{ duration: Math.random() * 10 + 10, repeat: Infinity }}
                 className="absolute w-1 h-1 bg-[#5a00e0] rounded-full blur-[1px]"
              />
          ))}
       </div>
 
+      {/* Header */}
+    
       {/* --- 2. COMPACT HEADER (Aazmaao Branding) --- */}
       <div className="absolute top-0 left-0 w-full z-30 bg-white/60 backdrop-blur-xl border-b border-white/40 pt-10 pb-3 flex justify-between items-center px-6 shadow-sm">
         <div>
@@ -1462,76 +1711,38 @@ const HomeFeed = ({ onTryOn, addToCart, cartCount, onCheckout }) => {
         </div>
       </div>
 
-      {/* --- 3. SCROLLABLE FEED (Clean Grid) --- */}
-      <div className="flex-1 overflow-y-auto px-4 pt-[90px] pb-32 scroll-smooth z-10">
-         <motion.div 
-            variants={containerStagger}
-            initial="hidden"
-            animate="show"
-            className="columns-2 gap-4 space-y-4"
-         >
-            {IMAGES.feed.map((item) => (
-                <motion.div 
-                    key={item.id} 
-                    variants={itemFadeUp}
-                    className="break-inside-avoid relative group rounded-[24px] overflow-hidden bg-white shadow-sm hover:shadow-xl transition-all duration-500 ease-out"
-                >
-                    {/* Image Area */}
-                    <div className="relative overflow-hidden">
-                        <img 
-                            src={item.src} 
-                            alt={item.outfit} 
-                            className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105" 
-                        />
-                        
-                        {/* Recommended Badge */}
-                        {item.id === 1 && (
-                             <div className="absolute top-3 left-3 bg-[#5a00e0] text-white text-[8px] font-bold px-2 py-1 rounded-md uppercase tracking-widest shadow-lg">
-                                 Top Pick
-                             </div>
-                        )}
-
-                        {/* Hover Overlay */}
-                        <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
-                            <motion.button 
-                                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                                onClick={() => onTryOn(item)} 
-                                className="bg-white text-black text-[10px] font-bold px-5 py-2.5 rounded-full shadow-lg uppercase tracking-wider"
-                            >
-                                Try On
-                            </motion.button>
-                            <motion.button 
-                                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                                onClick={() => addToCart(item)} 
-                                className="bg-[#5a00e0] text-white text-[10px] font-bold px-5 py-2.5 rounded-full shadow-lg uppercase tracking-wider"
-                            >
-                                Add to Bag
-                            </motion.button>
-                        </div>
-                    </div>
-                    
-                    {/* Minimal Metadata */}
-                    <div className="p-3 bg-white">
-                        <div className="flex justify-between items-start mb-1">
-                            <p className="text-xs font-bold text-[#1a1a1a] uppercase tracking-wide truncate w-[80%]">{item.outfit}</p>
-                            <p className="text-xs font-bold text-[#5a00e0]">${item.price}</p>
-                        </div>
-                        <p className="text-[9px] text-gray-400 uppercase tracking-widest">Aazmaao Collection</p>
-                    </div>
-                </motion.div>
+      {/* Feed Area */}
+      <div className="flex-1 overflow-y-auto px-4 pt-[120px] pb-40 scroll-smooth z-10 no-scrollbar">
+         <div className="max-w-md mx-auto">
+            {OUTFITS.map((outfit) => (
+                <OutfitCard 
+                    key={outfit.id} 
+                    outfit={outfit} 
+                    mixSelection={mixSelection}
+                    onToggleMix={togglePiece}
+                    onTryOn={onTryOn}
+                    addToCart={addToCart}
+                />
             ))}
-         </motion.div>
+         </div>
       </div>
 
-      {/* --- 4. NAVBAR (Restored) --- */}
-      <UltraModernNavbar cartCount={cartCount} onCheckout={onCheckout} />
-      
-      {/* Bottom Gradient Fade */}
-      <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-[#f2f4f8] via-[#f2f4f8]/90 to-transparent pointer-events-none z-20"></div>
-    </motion.div>
+      {/* The Liquid Morphing Navbar */}
+      <UltraModernNavbar 
+         mixSelection={mixSelection} 
+         clearMix={clearMix}
+         onTryOnMix={() => {
+             // Pass the mixed selection to the main Try On handler
+             if (onTryOn) onTryOn(mixSelection);
+             alert(`Trying on Mixed Outfit: ${mixSelection.top?.name || ''} + ${mixSelection.bottom?.name || ''}`);
+         }}
+         cartCount={cartCount}
+         onCheckout={onCheckout}
+      />
+
+    </div>
   );
 };
-
 
 // --- 6. TRY ON SCREEN (CRITICALLY UPDATED FOR MODAL HEIGHT & PINS) ---
 // --- 6. UPDATED TRY ON SCREEN (Ethereal Glass & Liquid Physics) ---
