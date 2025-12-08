@@ -1680,18 +1680,143 @@ const UltraModernNavbar = ({ mixSelection, clearMix, onTryOnMix, cartCount, onCh
 };
 
 // --- 6. UPDATED HOME FEED (Aazmaao Zen) ---
+// --- NEW COMPONENT: AAZMAAO TUTORIAL OVERLAY ---
+const AazmaaoTutorial = ({ onComplete }) => {
+  const [step, setStep] = useState(1);
+
+  // Animation variants for the spotlight/glow
+  const pulse = {
+    initial: { scale: 0.9, opacity: 0.5, boxShadow: "0 0 0 rgba(90, 0, 224, 0)" },
+    animate: {
+      scale: 1,
+      opacity: 1,
+      boxShadow: "0 0 40px rgba(90, 0, 224, 0.8)",
+      transition: { duration: 1, repeat: Infinity, repeatType: "reverse" }
+    }
+  };
+
+  const nextStep = () => {
+    if (step === 1) setStep(2);
+    else onComplete();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex flex-col pointer-events-auto"
+      onClick={nextStep} // Click anywhere to advance
+    >
+      <div className="relative w-full h-full">
+
+        {/* --- STEP 1: HIGHLIGHT "+" BUTTON --- */}
+        <AnimatePresence>
+          {step === 1 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="absolute top-[60%] left-1/2 -translate-x-1/2 flex flex-col items-center"
+            >
+              {/* The Spotlight Ring simulating the card location */}
+              <motion.div
+                variants={pulse}
+                initial="initial"
+                animate="animate"
+                className="w-16 h-16 rounded-full border-4 border-[#5a00e0] flex items-center justify-center mb-4 relative"
+              >
+                <div className="absolute inset-0 bg-[#5a00e0]/20 rounded-full animate-ping" />
+                <Plus size={32} className="text-white" />
+              </motion.div>
+
+              {/* Text Instruction */}
+              <div className="bg-white text-black p-4 rounded-2xl shadow-2xl max-w-[280px] text-center relative">
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rotate-45" />
+                <h3 className="font-bold text-lg text-[#5a00e0] mb-1">Create a Mix</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Tap the <span className="font-bold text-[#5a00e0]">+</span> icon on any outfit to add pieces to your collection.
+                </p>
+                <button className="mt-3 text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-[#5a00e0] transition-colors">
+                  Tap to Next
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* --- STEP 2: HIGHLIGHT NAVBAR --- */}
+        <AnimatePresence>
+          {step === 2 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="absolute bottom-28 left-0 w-full flex flex-col items-center"
+            >
+              {/* Text Instruction */}
+             {/* Text Instruction with Image */}
+<div className="bg-white text-black p-5 rounded-[24px] shadow-2xl max-w-[320px] text-center relative mb-4">
+  
+  {/* Triangle Pointer */}
+  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-5 h-5 bg-white rotate-45" />
+  
+  <h3 className="font-playfair font-black text-xl text-[#5a00e0] mb-2">
+    Mix & Match
+  </h3>
+
+  {/* --- ADDED IMAGE HERE --- */}
+  <div className="relative w-full h-12 mb-3 rounded-full overflow-hidden shadow-lg border border-[#5a00e0]/20 ring-4 ring-[#5a00e0]/5">
+     {/* Replace 'navPreviewImg' with your actual import or path */}
+     <img 
+       src="/image.png" 
+       alt="Try On Preview" 
+       className="w-full h-full object-cover"
+     />
+     {/* Shine Effect Overlay */}
+     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent w-full h-full -skew-x-12 animate-shimmer" />
+  </div>
+
+  <p className="text-sm text-gray-600 leading-relaxed font-medium">
+    Selected items appear in this dock. Pick two items and tap <span className="font-bold text-[#5a00e0]">Try On</span> to see the magic!
+  </p>
+
+  <button 
+    onClick={nextStep} // Ensure this triggers your next action
+    className="mt-4 w-full py-2.5 bg-[#5a00e0] text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-[#4a00b5] hover:scale-[1.02] transition-all shadow-lg shadow-[#5a00e0]/30"
+  >
+    Get Started
+  </button>
+</div>
+
+              {/* The Spotlight Rectangle simulating Navbar */}
+              <motion.div
+                variants={pulse}
+                initial="initial"
+                animate="animate"
+                
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+};
+
+// --- 6. UPDATED HOME FEED (With Tutorial) ---
 const HomeFeed = ({ onTryOn, addToCart, cartCount = 2, onCheckout }) => {
   // Global State for the "Mix"
-  // This allows selecting a Top from Card A and a Bottom from Card B
   const [mixSelection, setMixSelection] = useState({ top: null, bottom: null });
+  
+  // --- TUTORIAL STATE ---
+  const [showTutorial, setShowTutorial] = useState(true); // Set to true to show on load
 
   const togglePiece = (piece) => {
      setMixSelection(prev => {
-         // If clicking same piece, remove it
          if (prev[piece.type]?.id === piece.id) {
              return { ...prev, [piece.type]: null };
          }
-         // Otherwise, replace/add for that category (top/bottom)
          return { ...prev, [piece.type]: piece };
      });
   };
@@ -1701,6 +1826,13 @@ const HomeFeed = ({ onTryOn, addToCart, cartCount = 2, onCheckout }) => {
   return (
     <div className="w-full h-full relative flex flex-col bg-[#f2f4f8] overflow-hidden font-sans">
       
+      {/* --- RENDER TUTORIAL OVERLAY --- */}
+      <AnimatePresence>
+        {showTutorial && (
+            <AazmaaoTutorial onComplete={() => setShowTutorial(false)} />
+        )}
+      </AnimatePresence>
+
       {/* Background Particles */}
       <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
          {Array.from({ length: 15 }).map((_, i) => (
@@ -1714,8 +1846,6 @@ const HomeFeed = ({ onTryOn, addToCart, cartCount = 2, onCheckout }) => {
          ))}
       </div>
 
-      {/* Header */}
-    
       {/* --- 2. COMPACT HEADER (Aazmaao Branding) --- */}
       <div className="absolute top-0 left-0 w-full z-30 bg-white/60 backdrop-blur-xl border-b border-white/40 pt-10 pb-3 flex justify-between items-center px-6 shadow-sm">
         <div>
@@ -1730,7 +1860,7 @@ const HomeFeed = ({ onTryOn, addToCart, cartCount = 2, onCheckout }) => {
             <Bell size={18} className="text-gray-700" />
           </button>
           <div className="w-9 h-9 rounded-full overflow-hidden border border-white/80 shadow-sm">
-             <img src={IMAGES.stylistBg} className="w-full h-full object-cover" alt="Profile"/>
+             <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" className="w-full h-full object-cover" alt="Profile"/>
           </div>
         </div>
       </div>
@@ -1738,6 +1868,7 @@ const HomeFeed = ({ onTryOn, addToCart, cartCount = 2, onCheckout }) => {
       {/* Feed Area */}
       <div className="flex-1 overflow-y-auto px-4 pt-[120px] pb-40 scroll-smooth z-10 no-scrollbar">
          <div className="max-w-md mx-auto">
+            {/* Note: Ensure OUTFITS array exists in your data file */}
             {OUTFITS.map((outfit) => (
                 <OutfitCard 
                     key={outfit.id} 
@@ -1756,7 +1887,6 @@ const HomeFeed = ({ onTryOn, addToCart, cartCount = 2, onCheckout }) => {
          mixSelection={mixSelection} 
          clearMix={clearMix}
          onTryOnMix={() => {
-             // Pass the mixed selection to the main Try On handler
              if (onTryOn) onTryOn(mixSelection);
              alert(`Trying on Mixed Outfit: ${mixSelection.top?.name || ''} + ${mixSelection.bottom?.name || ''}`);
          }}
