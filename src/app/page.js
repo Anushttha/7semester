@@ -1380,7 +1380,7 @@ const Analyzing = ({ onComplete }) => {
 const OutfitCard = ({ outfit, mixSelection, onToggleMix, onTryOn, addToCart }) => {
   const [activePiece, setActivePiece] = useState(outfit.pieces[0]);
   const cardRef = useRef(null);
-  const isInView = useInView(cardRef, { once: true, margin: "-100px" });
+  const isInView = useInView(cardRef, { once: true, margin: "-50px" });
 
   // 3D Tilt Effect
   const x = useMotionValue(0);
@@ -1394,8 +1394,8 @@ const OutfitCard = ({ outfit, mixSelection, onToggleMix, onTryOn, addToCart }) =
     y.set((clientY - top) / height - 0.5);
   }
 
-  const rotateX = useTransform(mouseY, [-0.5, 0.5], [3, -3]);
-  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-3, 3]);
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], [2, -2]); 
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-2, 2]);
 
   // Check if current active piece is in the global mix
   const isSelected = mixSelection[activePiece.type]?.id === activePiece.id;
@@ -1403,13 +1403,14 @@ const OutfitCard = ({ outfit, mixSelection, onToggleMix, onTryOn, addToCart }) =
   return (
     <motion.div
       ref={cardRef}
-      initial={{ opacity: 0, y: 50, scale: 0.95 }}
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
       animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
-      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => { x.set(0); y.set(0); }}
-      style={{ rotateX, rotateY, perspective: 1000 }}
-      className="relative w-full mb-10 h-[520px] rounded-[36px] shadow-2xl overflow-hidden group cursor-pointer bg-white"
+      style={{ rotateX, rotateY, perspective: 800 }}
+      // Adjusted height (h-[340px]) and sizing for 2-column grid
+      className="relative w-full h-[340px] rounded-[24px] shadow-lg overflow-hidden group cursor-pointer bg-white"
     >
       {/* 1. Main Image */}
       <AnimatePresence mode="wait">
@@ -1418,22 +1419,22 @@ const OutfitCard = ({ outfit, mixSelection, onToggleMix, onTryOn, addToCart }) =
           initial={{ opacity: 0, scale: 1.1 }}
           animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
           exit={{ opacity: 0, scale: 1.05, filter: "blur(4px)" }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.4 }}
           className="absolute inset-0"
         >
           <img src={activePiece.image} alt={activePiece.name} className="w-full h-full object-cover" />
         </motion.div>
       </AnimatePresence>
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10 pointer-events-none" />
 
-      {/* 2. Floating Dock */}
-      <div className="absolute bottom-0 left-0 w-full p-5 z-30 flex justify-center">
+      {/* 2. Floating Dock (Compact UI) */}
+      <div className="absolute bottom-0 left-0 w-full p-2 z-30 flex justify-center">
         <motion.div
-          className="bg-white/10 backdrop-blur-xl border border-white/30 p-3 shadow-2xl rounded-[28px] max-w-[95%] w-full flex flex-col gap-3 relative overflow-hidden"
+          className="bg-white/10 backdrop-blur-md border border-white/20 p-2 shadow-xl rounded-[20px] w-full flex flex-col gap-2 relative overflow-hidden"
         >
           {/* Piece Selectors */}
-          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar z-10">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar z-10">
             {outfit.pieces.map((piece) => {
                const isPieceInMix = mixSelection[piece.type]?.id === piece.id;
                
@@ -1441,8 +1442,9 @@ const OutfitCard = ({ outfit, mixSelection, onToggleMix, onTryOn, addToCart }) =
                 <button
                     key={piece.id}
                     onClick={(e) => { e.stopPropagation(); setActivePiece(piece); }}
-                    className={`relative flex-shrink-0 w-11 h-11 rounded-full overflow-hidden border-2 transition-all duration-300
-                    ${activePiece.id === piece.id ? 'border-white scale-110 shadow-lg' : 'border-white/30 opacity-70'}
+                    // Smaller selector circles for grid
+                    className={`relative flex-shrink-0 w-8 h-8 rounded-full overflow-hidden border transition-all duration-300
+                    ${activePiece.id === piece.id ? 'border-white scale-110 shadow-sm' : 'border-white/30 opacity-70'}
                     `}
                 >
                     <img src={piece.image} alt={piece.name} className="w-full h-full object-cover" />
@@ -1451,8 +1453,7 @@ const OutfitCard = ({ outfit, mixSelection, onToggleMix, onTryOn, addToCart }) =
                     {isPieceInMix && (
                         <motion.div 
                             layoutId={`img-${piece.id}`} 
-                            className="absolute inset-0 bg-green-500/20 z-20"
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }} 
+                            className="absolute inset-0 bg-green-500/30 z-20"
                         />
                     )}
                 </button>
@@ -1460,26 +1461,26 @@ const OutfitCard = ({ outfit, mixSelection, onToggleMix, onTryOn, addToCart }) =
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-between pt-2 border-t border-white/20 z-10">
-            <div className="flex flex-col text-white">
-              <span className="text-[10px] uppercase font-bold opacity-70">{activePiece.type}</span>
-              <span className="text-sm font-bold truncate w-24">{activePiece.name}</span>
+          <div className="flex flex-col gap-2 pt-1 border-t border-white/10 z-10">
+            <div className="flex flex-col text-white px-1">
+              <span className="text-[8px] uppercase font-bold opacity-60 tracking-wider">{activePiece.type}</span>
+              <span className="text-[10px] font-bold truncate leading-tight">{activePiece.name}</span>
             </div>
 
             {/* ACTION BUTTONS GROUP */}
-            <div className="flex gap-2">
+            <div className="flex items-center justify-between gap-1">
                 
-                {/* 1. INDIVIDUAL TRY ON (Restored) */}
+                {/* 1. INDIVIDUAL TRY ON */}
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={(e) => { e.stopPropagation(); onTryOn(activePiece); }}
-                  className="flex items-center gap-1.5 bg-white text-black px-3 py-2 rounded-full shadow-lg"
+                  className="flex-1 flex items-center justify-center gap-1 bg-white text-black py-1.5 rounded-full shadow-sm"
                 >
-                  <Layers size={12} />
-                  <span className="text-[9px] font-bold uppercase tracking-wider">Try On</span>
+                  <Layers size={10} strokeWidth={2.5} />
+                  <span className="text-[8px] font-extrabold uppercase tracking-wide">Try</span>
                 </motion.button>
 
-                {/* 2. BUY/LINK (Restored) */}
+                {/* 2. BUY/LINK */}
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={(e) => {
@@ -1487,22 +1488,22 @@ const OutfitCard = ({ outfit, mixSelection, onToggleMix, onTryOn, addToCart }) =
                     window.open(`/product/${activePiece.id}`, '_blank');
                     addToCart(activePiece);
                   }}
-                  className="w-8 h-8 flex items-center justify-center bg-black/40 text-white border border-white/20 rounded-full hover:bg-black/60 transition-colors"
+                  className="w-7 h-7 flex items-center justify-center bg-white/10 text-white border border-white/10 rounded-full"
                 >
-                  <ArrowUpRight size={14} />
+                  <ArrowUpRight size={12} />
                 </motion.button>
 
-                {/* 3. ADD TO MIX (New Feature) */}
+                {/* 3. ADD TO MIX */}
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={(e) => { e.stopPropagation(); onToggleMix(activePiece); }}
-                  className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors border
+                  className={`w-7 h-7 flex items-center justify-center rounded-full transition-colors border
                     ${isSelected 
-                        ? 'bg-green-500 text-white border-green-400' 
+                        ? 'bg-green-500 text-white border-green-500' 
                         : 'bg-[#5a00e0] text-white border-[#5a00e0]'}
                   `}
                 >
-                  {isSelected ? <Check size={14} /> : <Plus size={14} />}
+                  {isSelected ? <Check size={12} strokeWidth={3} /> : <Plus size={12} strokeWidth={3} />}
                 </motion.button>
 
             </div>
@@ -1512,6 +1513,7 @@ const OutfitCard = ({ outfit, mixSelection, onToggleMix, onTryOn, addToCart }) =
     </motion.div>
   );
 };
+
 
 // --- NEW COMPONENT: ULTRA MODERN NAVBAR ---
 // --- 5. NAVBAR (Your Previous Code - Restored) ---
@@ -1806,11 +1808,8 @@ const AazmaaoTutorial = ({ onComplete }) => {
 
 // --- 6. UPDATED HOME FEED (With Tutorial) ---
 const HomeFeed = ({ onTryOn, addToCart, cartCount = 2, onCheckout }) => {
-  // Global State for the "Mix"
   const [mixSelection, setMixSelection] = useState({ top: null, bottom: null });
-  
-  // --- TUTORIAL STATE ---
-  const [showTutorial, setShowTutorial] = useState(true); // Set to true to show on load
+  const [showTutorial, setShowTutorial] = useState(true);
 
   const togglePiece = (piece) => {
      setMixSelection(prev => {
@@ -1826,14 +1825,12 @@ const HomeFeed = ({ onTryOn, addToCart, cartCount = 2, onCheckout }) => {
   return (
     <div className="w-full h-full relative flex flex-col bg-[#f2f4f8] overflow-hidden font-sans">
       
-      {/* --- RENDER TUTORIAL OVERLAY --- */}
       <AnimatePresence>
         {showTutorial && (
             <AazmaaoTutorial onComplete={() => setShowTutorial(false)} />
         )}
       </AnimatePresence>
 
-      {/* Background Particles */}
       <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
          {Array.from({ length: 15 }).map((_, i) => (
              <motion.div
@@ -1846,7 +1843,6 @@ const HomeFeed = ({ onTryOn, addToCart, cartCount = 2, onCheckout }) => {
          ))}
       </div>
 
-      {/* --- 2. COMPACT HEADER (Aazmaao Branding) --- */}
       <div className="absolute top-0 left-0 w-full z-30 bg-white/60 backdrop-blur-xl border-b border-white/40 pt-10 pb-3 flex justify-between items-center px-6 shadow-sm">
         <div>
            <p className="text-[9px] font-bold text-gray-400 tracking-[0.25em] uppercase mb-0.5">Welcome</p>
@@ -1865,10 +1861,9 @@ const HomeFeed = ({ onTryOn, addToCart, cartCount = 2, onCheckout }) => {
         </div>
       </div>
 
-      {/* Feed Area */}
-      <div className="flex-1 overflow-y-auto px-4 pt-[120px] pb-40 scroll-smooth z-10 no-scrollbar">
-         <div className="max-w-md mx-auto">
-            {/* Note: Ensure OUTFITS array exists in your data file */}
+      {/* --- GRID LAYOUT ENFORCED --- */}
+      <div className="flex-1 overflow-y-auto px-2 pt-[100px] pb-32 scroll-smooth z-10 no-scrollbar">
+         <div className="max-w-2xl mx-auto grid grid-cols-2 gap-2">
             {OUTFITS.map((outfit) => (
                 <OutfitCard 
                     key={outfit.id} 
@@ -1882,7 +1877,6 @@ const HomeFeed = ({ onTryOn, addToCart, cartCount = 2, onCheckout }) => {
          </div>
       </div>
 
-      {/* The Liquid Morphing Navbar */}
       <UltraModernNavbar 
          mixSelection={mixSelection} 
          clearMix={clearMix}
