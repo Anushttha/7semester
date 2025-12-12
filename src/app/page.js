@@ -1516,7 +1516,8 @@ const OutfitCard = ({ outfit, mixSelection, onToggleMix, onTryOn, addToCart }) =
 
 
 // --- NEW COMPONENT: ULTRA MODERN NAVBAR ---
-// --- 5. NAVBAR (Your Previous Code - Restored) ---
+// --- 5.
+//  NAVBAR (Your Previous Code - Restored) ---
 const UltraModernNavbar = ({ mixSelection, clearMix, onTryOnMix, cartCount, onCheckout }) => {
   const [activeTab, setActiveTab] = useState("home");
   const isMixMode = mixSelection.top || mixSelection.bottom;
